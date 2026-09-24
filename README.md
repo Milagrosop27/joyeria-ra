@@ -2,7 +2,7 @@
 
 Este repositorio contiene la base estructural del proyecto, dividida en una interfaz frontend (React/Vite) y una API backend (Node.js/Express) conectada a TiDB Cloud.
 
-### 📌 Avance Actual (Base Estable)
+### 📌 Avance Actual 
 * **Backend y Base de Datos:** Arquitectura modular operativa (Rutas, Controladores y Modelos). Conexión exitosa a TiDB Cloud.
 * **Seguridad (Admin):** Middleware de autenticación con JWT configurado y ruta de inicio de sesión lista.
 * **Frontend Cliente:** Diseño minimalista completado para el Catálogo y los Detalles de la Joya, consumiendo datos reales de la API.
@@ -11,14 +11,19 @@ Este repositorio contiene la base estructural del proyecto, dividida en una inte
 ### 🚀 Instalación y Configuración local
 
 **1. Clonar el repositorio**
-git clone <URL_DEL_REPOSITORIO>
-cd joyeria-ra 
+```bash
+git clone https://github.com/Milagrosop27/joyeria-ra.git
+cd joyeria-ra
+```
 **2. Levantar el Backend (Puerto 3000)**
+```bash
 cd backend
 npm install
 npm run dev
+```
 **3. Levantar el Frontend (Puerto 5173)**
 ```bash
 cd frontend
 npm install
 npm run dev
+```
