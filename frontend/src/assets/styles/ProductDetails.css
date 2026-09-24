@@ -1,0 +1,96 @@
+.details-wrapper {
+    background-color: #FAFAFA;
+    min-height: 100vh;
+    padding: 80px 20px;
+    font-family: "Montserrat", sans-serif;
+    color: #1A1A1A;
+}
+
+.details-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.details-image-section {
+    background-color: #F5F5F5;
+    height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #A3A3A3;
+    font-style: italic;
+    border: 1px solid #EAEAEA;
+}
+
+.details-info-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.details-title {
+    font-family: "Didot", serif;
+    font-size: 2.5rem;
+    font-weight: 400;
+    margin: 0 0 15px 0;
+}
+
+.details-price {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 30px;
+}
+
+.details-description {
+    font-size: 1rem;
+    color: #595959;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.details-colors-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.details-colors-list {
+    font-size: 0.9rem;
+    color: #7A736E;
+    margin-bottom: 40px;
+}
+
+.details-try-button {
+    font-family: "Montserrat", sans-serif;
+    padding: 18px 0;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    border: 1px solid #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.details-try-button:hover {
+    background-color: #FFFFFF;
+    color: #1A1A1A;
+}
+
+/* Adaptabilidad para móviles */
+@media (max-width: 768px) {
+    .details-container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    .details-image-section {
+        height: 400px;
+    }
+}

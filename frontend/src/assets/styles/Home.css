@@ -1,0 +1,72 @@
+/* frontend/src/assets/styles/Home.css */
+
+.home-container {
+    background-color: #FAFAFA;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin: 0;
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 650px;
+}
+
+.home-logo {
+    width: 90px;
+    margin-bottom: 25px;
+    opacity: 0.9;
+}
+
+.home-title {
+    font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+    font-size: 3rem;
+    font-weight: 400;
+    color: #1A1A1A;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 20px 0;
+}
+
+.home-divider {
+    width: 50px;
+    height: 1px;
+    background-color: #D4AF37;
+    margin-bottom: 25px;
+}
+
+.home-subtitle {
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: #595959;
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+    margin-bottom: 45px;
+}
+
+.home-button {
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    padding: 15px 40px;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background-color: #715605;
+    color: #ffffffff;
+    border: 1px solid #edd9ee;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.home-button:hover {
+    background-color: #eadeb8;
+    color: #1A1A1A;
+}
