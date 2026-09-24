@@ -11,21 +11,13 @@ Este repositorio contiene la base estructural del proyecto, dividida en una inte
 ### 🚀 Instalación y Configuración local
 
 **1. Clonar el repositorio**
-```bash
 git clone <URL_DEL_REPOSITORIO>
-cd joyeria-ra
-
+cd joyeria-ra 
 **2. Levantar el Backend (Puerto 3000)**
-Abre una terminal y ejecuta:
-
-```bash
 cd backend
 npm install
 npm run dev
-
 **3. Levantar el Frontend (Puerto 5173)**
-Abre una segunda terminal en la raíz del proyecto y ejecuta:
-
 ```bash
 cd frontend
 npm install
