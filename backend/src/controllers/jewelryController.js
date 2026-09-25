@@ -12,10 +12,37 @@ const getJewelryCatalog = async (req, res) => {
 
 const getJewelryById = async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM Jewelry WHERE id = ?', [req.params.id]);
-        if (rows.length === 0) return res.status(404).json({ error: 'Joya no encontrada' });
-        res.json(rows[0]);
+        const [jewelryRows] = await pool.query('SELECT * FROM Jewelry WHERE id = ?', [req.params.id]);
+        if (jewelryRows.length === 0) return res.status(404).json({ error: 'Joya no encontrada' });
+        
+        const jewelry = jewelryRows[0];
+        
+        // Obtener variantes de la joya
+        const [variantRows] = await pool.query(
+            'SELECT * FROM Variants WHERE jewelry_id = ? AND is_active = 1',
+            [req.params.id]
+        );
+        
+        // Para cada variante, obtener sus modelos 3D
+        const variantsWithModels = await Promise.all(
+            variantRows.map(async (variant) => {
+                const [modelRows] = await pool.query(
+                    'SELECT * FROM Models3D WHERE variant_id = ?',
+                    [variant.id]
+                );
+                return {
+                    ...variant,
+                    models3d: modelRows
+                };
+            })
+        );
+        
+        res.json({
+            ...jewelry,
+            variants: variantsWithModels
+        });
     } catch (error) {
+        console.error('Error al obtener la joya:', error);
         res.status(500).json({ error: 'Error al obtener la joya' });
     }
 };

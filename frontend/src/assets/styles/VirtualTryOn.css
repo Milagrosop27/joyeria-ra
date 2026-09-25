@@ -1,0 +1,358 @@
+.virtual-tryon-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8F0 50%, #FFF5E6 100%);
+  color: #1A1A1A;
+  font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  position: relative;
+}
+
+.tryon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-icon {
+  color: #D4AF37;
+}
+
+.header-text h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-text p {
+  margin: 2px 0 0 0;
+  font-size: 0.85rem;
+  color: #666666;
+  font-weight: 300;
+}
+
+.back-button {
+  padding: 8px 20px;
+  background: transparent;
+  color: #D4AF37;
+  text-decoration: none;
+  border: 2px solid #D4AF37;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+  color: white;
+  border-color: #D4AF37;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.tryon-main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 107, 107, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.camera-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(26, 26, 26, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.jewelry-renderer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 2;
+  background: transparent !important;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
+}
+
+.tryon-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(10px);
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.variant-selector {
+  margin-bottom: 1.5rem;
+}
+
+.variant-selector h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #D4AF37;
+  letter-spacing: 0.05em;
+}
+
+.variant-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.variant-button {
+  padding: 12px 24px;
+  border: 2px solid transparent;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #1A1A1A;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  min-width: 80px;
+}
+
+.variant-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+}
+
+.variant-button.active {
+  border-color: #D4AF37;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.jewelries-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #D4AF37;
+  letter-spacing: 0.05em;
+}
+
+.jewelry-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #D4AF37 rgba(255, 255, 255, 0.1);
+}
+
+.jewelry-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.jewelry-carousel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.jewelry-carousel::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 3px;
+}
+
+.mini-jewelry-card {
+  min-width: 140px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mini-jewelry-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #D4AF37;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+}
+
+.mini-jewelry-card.selected {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(184, 150, 12, 0.15) 100%);
+  border: 2px solid #D4AF37;
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+  cursor: default;
+}
+
+.mini-jewelry-card.selected:hover {
+  transform: none;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(184, 150, 12, 0.15) 100%);
+}
+
+.selected-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+}
+
+.mini-jewelry-image {
+  width: 100%;
+  height: 100px;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: #666666;
+}
+
+.mini-jewelry-name {
+  margin: 0;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #1A1A1A;
+  font-weight: 400;
+}
+
+.loading-message,
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+}
+
+.loading-message p,
+.error-message p {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.error-message p {
+  color: #ff6b6b;
+  margin-bottom: 1.5rem;
+}
+
+.error-message a {
+  color: #D4AF37;
+  text-decoration: none;
+  padding: 12px 24px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 2px solid #D4AF37;
+  border-radius: 25px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.error-message a:hover {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tryon-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.4rem;
+  }
+
+  .header-content p {
+    font-size: 0.9rem;
+  }
+
+  .back-button {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .tryon-panel {
+    padding: 1rem 1.5rem;
+    max-height: 40vh;
+  }
+
+  .mini-jewelry-card {
+    min-width: 120px;
+  }
+
+  .jewelry-renderer {
+    width: 150px;
+    height: 150px;
+  }
+}

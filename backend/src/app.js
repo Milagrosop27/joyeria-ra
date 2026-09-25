@@ -14,6 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('public/uploads'));
+app.use('/models', express.static('public/models'));
 
 // Declaración de los endpoints
 app.use('/api/jewelry', jewelryRoutes);

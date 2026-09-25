@@ -1,0 +1,589 @@
+Plataforma web de Visualización de Joyería Mediante Realidad Aumentada 
+1.1. Problema central
+Elevada incertidumbre y desconfianza de los clientes al no poder visualizar con precisión el aspecto y las proporciones de las joyas sobre su cuerpo antes de decidir adquirirlas.
+1.2. Solución tecnológica
+Desarrollo de una plataforma web que permita a los clientes explorar un catálogo de joyas y probarlas virtualmente mediante Realidad Aumentada, utilizando la cámara de su dispositivo y modelos 3D que representen las joyas seleccionadas sobre su cuerpo.
+1.3. Objetivo de la plataforma
+Facilitar la visualización de joyas mediante una experiencia interactiva que permita a los clientes probar diferentes modelos y variantes de color antes de tomar una decisión de compra.
+1.4. Funcionamiento General de la Plataforma
+La experiencia del cliente será la siguiente:
+Ingresar a la página web → Explorar el catálogo → Seleccionar una categoría → Elegir una joya → Probar virtualmente → Cambiar de modelo o color → Explorar otras joyas.
+La plataforma no gestionará pedidos ni pagos. Su finalidad será permitir que el cliente conozca los productos y visualice cómo podrían lucir sobre su cuerpo mediante modelos 3D y Realidad Aumentada.
+1.5. Estructura de la Plataforma Web
+El acceso a la página web no tendrá inicio de sesión
+1.5.1. Página de Inicio (Módulo Inicio)
+Será la pantalla principal de la plataforma.
+Contendrá:
+Nombre y logotipo del negocio.
+Presentación de la plataforma.
+Se podría incluir un botón principal:
+«Explorar joyas»
+Al seleccionarlo, el cliente accederá al catálogo.
+1.5.2. Catálogo de Joyas (Módulo Catálogo)
+El catálogo mostrará los productos organizados por categorías para facilitar la búsqueda y selección.
+Las categorías iniciales serán:
+Categoría
+Productos que incluye
+Pulseras
+Pulseras de diferentes diseños, materiales y colores.
+Aretes
+Aretes pequeños, largos, circulares, colgantes y otros diseños.
+Collares
+Collares cortos, largos, con dijes y otros diseños.
+
+Cada producto se presentará mediante una tarjeta que contendrá:
+Fotografía de la joya.
+Nombre del producto.
+Precio.
+Colores disponibles.
+Descripción breve.
+Disponibilidad comercial
+Botón «Probar virtualmente».
+Cuando el cliente seleccione «Probar virtualmente», será dirigido al probador correspondiente a la categoría de la joya seleccionada.
+La disponibilidad comercial será administrada manualmente desde el panel administrativo y no impedirá necesariamente que el cliente pruebe virtualmente la joya. 
+1.5.3. Probador virtual mediante Realidad Aumentada 
+Este será el componente principal de la plataforma.
+Permitirá que el cliente visualice una joya sobre su cuerpo utilizando la cámara de su dispositivo y un modelo 3D del producto seleccionado.
+La interfaz tomará como referencia la imagen proporcionada y contará con los siguientes elementos:
+Elemento
+Funcionalidad
+Vista de cámara
+Mostrará al cliente en tiempo real.
+Joya seleccionada
+Permitirá visualizar el modelo 3D de la joya sobre la zona corporal correspondiente.
+Catálogo de la categoría
+Mostrará otras joyas de la misma categoría para probar diferentes modelos.
+Selector de variantes
+Permitirá cambiar los colores disponibles de la joya seleccionada.
+Botón de regreso
+Permitirá volver al catálogo principal.
+
+Funcionamiento del probador
+El cliente selecciona una joya del catálogo y presiona «Probar virtualmente».
+El sistema identifica la categoría de la joya seleccionada y abre el probador correspondiente.
+Se solicita autorización para utilizar la cámara del dispositivo.
+Una vez concedido el permiso, se muestra la imagen del cliente en pantalla.
+El sistema detecta la zona corporal correspondiente y posiciona el modelo 3D de la joya.
+En la parte inferior de la interfaz se muestran otras joyas disponibles de la misma categoría.
+El cliente puede seleccionar otro modelo y visualizarlo virtualmente sin regresar al catálogo principal.
+Si la joya cuenta con diferentes variantes de color, podrá seleccionarlas y observar los cambios en tiempo real.
+El cliente podrá continuar probando diferentes joyas o regresar al catálogo principal.
+Regla principal: el probador mostrará únicamente las joyas correspondientes a la categoría seleccionada.
+Por ejemplo, si el cliente ingresa al probador de aretes, podrá visualizar otros modelos de aretes, pero no pulseras ni collares.
+Además, podrá cambiar de modelo sin salir del probador ni volver a activar la cámara cada vez que seleccione otra joya.
+Flujo del Cliente:
+El flujo de navegación será el siguiente: 
+                  INICIO
+                    │
+                    ▼
+             Explorar catálogo
+                    │
+                    ▼
+           Seleccionar categoría
+                    │
+                    ▼
+              Elegir una joya
+                    │
+                    ▼
+            Probar virtualmente
+                    │
+                    ▼
+             Autorizar la cámara
+                    │
+                    ▼
+           Detectar zona corporal
+                    │
+                    ▼
+        Posicionar el modelo 3D
+          sobre el cuerpo del
+                 cliente
+                    │
+                    ▼
+          Visualizar la joya
+          mediante la cámara
+                    │
+                    ▼
+           ¿Desea probar otra?
+                /        \
+              Sí          No
+              │            │
+              ▼            ▼
+       Seleccionar      Finalizar
+       otro modelo      la prueba
+              │            │
+              ▼            ▼
+       Cambiar joya     Regresar al
+       o variante        catálogo
+              │
+              ▼
+       Actualizar modelo 3D
+              │
+              ▼
+       Visualizar nuevamente
+1.6. Panel Administrativo
+El panel administrativo será un espacio de acceso restringido al propietario del negocio, quien deberá iniciar sesión para gestionar la información de las joyas y los recursos necesarios para su visualización mediante Realidad Aumentada.
+A través de este panel, el administrador podrá mantener actualizado el catálogo que estará disponible para los clientes, organizando los productos y sus respectivas características.
+Este panel permitirá:
+Apartado
+Funcionalidad
+Gestión de joyas
+Registrar nuevas joyas, consultar su información, editar sus datos y desactivarlas cuando ya no deban mostrarse en el catálogo. 
+Gestión de categorías
+Organizar las joyas en las categorías Pulseras, Aretes y Collares, facilitando su clasificación y visualización en el catálogo. 
+Gestión de variantes
+Administrar colores, características y disponibilidad.
+Gestión de modelos 3D
+Registrar, actualizar y asociar los modelos 3D con las joyas y sus variantes correspondientes, de modo que puedan utilizarse en el probador virtual. 
+
+De esta manera, el propietario podrá incorporar nuevos productos y mantener actualizada la información que visualizarán los clientes.
+Flujo del administrador:
+
+          ACCESO ADMINISTRATIVO
+                   │
+                   ▼
+           Pantalla de login
+                   │
+                   ▼
+          Ingresar credenciales
+                   │
+                   ▼
+          Validar autenticación
+                   │
+             ┌─────┴─────┐
+             │           │
+       Credenciales   Credenciales
+         válidas       inválidas
+             │           │
+             ▼           ▼
+       Panel admin    Mostrar error
+             │
+             ▼
+       Seleccionar gestión
+             │
+     ┌───────┼───────────┬────────────┐
+     ▼       ▼           ▼            ▼
+   Joyas  Categorías  Variantes    Modelos 3D
+     │       │           │            │
+     └───────┴───────────┴────────────┘
+                     │
+                     ▼
+            Registrar o actualizar
+                 información
+                     │
+                     ▼
+             Guardar los cambios
+                     │
+                     ▼
+             Actualizar catálogo
+                  público
+
+
+1.7. Consideraciones para la Implementación de la Realidad Aumentada 
+La plataforma utilizará modelos 3D para representar las joyas durante la prueba virtual.
+Para conseguir una visualización adecuada, será necesario considerar las características de cada categoría.
+Categoría
+Zona corporal
+Consideración para la visualización
+Aretes
+Orejas
+El modelo 3D deberá posicionarse cerca de las orejas y mantener una alineación adecuada cuando el cliente mueva la cabeza.
+Collares
+Cuello y parte superior del torso
+El modelo 3D deberá ajustarse a la posición y orientación del cuello y el torso.
+Pulseras
+Muñeca
+El modelo 3D deberá posicionarse alrededor de la muñeca y seguir sus movimientos.
+
+Cada categoría necesitará mecanismos de detección y seguimiento adecuados para mantener las joyas correctamente posicionadas.
+También será necesario preparar los modelos 3D para que puedan visualizarse correctamente en la plataforma.
+Entre los aspectos que se deberán considerar están:
+Forma y dimensiones del modelo.
+Escala de visualización.
+Orientación inicial.
+Materiales y colores.
+Nivel de detalle.
+Rendimiento durante la visualización.
+Compatibilidad con el mecanismo de Realidad Aumentada.
+La visualización virtual permitirá apreciar de manera aproximada cómo lucen las joyas sobre el cuerpo del cliente. Sin embargo, la precisión dependerá de los modelos 3D, el seguimiento corporal y las capacidades del dispositivo.
+1.8. Gestión de Variantes de las Joyas  
+Una misma joya podrá contar con diferentes variantes, como dorado, plateado u oro rosa.
+El cliente podrá seleccionar la variante que prefiera desde el probador virtual.
+Cuando seleccione una variante, el sistema actualizará el modelo 3D para mostrar la apariencia correspondiente.
+Por ejemplo:
+Collar Elegance
+Variante
+Color
+VAR-001
+Dorado
+VAR-002
+Plateado
+VAR-003
+Oro rosa
+
+Cada variante podrá estar asociada con un modelo 3D específico o con una configuración de materiales que permita modificar la apariencia del modelo.
+De esta manera, el cliente podrá comparar los diferentes colores sin salir del probador virtual.
+1.9. Tecnologías a Usar
+Tecnología
+Posible utilización
+React
+Desarrollo de la interfaz del catálogo y del probador virtual.
+Three.js
+Carga, representación y visualización de modelos 3D en el navegador.
+MediaPipe Face Landmarker
+Detección de puntos de referencia faciales que podrían utilizarse para posicionar aretes.
+MediaPipe Hand Landmarker
+Detección de puntos de referencia de las manos para ayudar a posicionar pulseras.
+MediaPipe Pose Landmarker
+Detección de puntos de referencia corporales que podrían contribuir al posicionamiento de collares.
+WebGL
+Renderizado de gráficos 3D en el navegador.
+TiDB Cloud
+Almacenar la información de las joyas, categorías y variantes. 
+
+1.10. Herramientas QA
+Herramienta
+Uso propuesto
+Postman
+Pruebas de las API del backend.
+Playwright
+Pruebas automatizadas de los principales flujos de navegación.
+Vitest
+Pruebas unitarias de componentes y funciones de React.
+Apache JMeter
+Pruebas de rendimiento y carga del backend.
+Google Lighthouse
+Evaluación del rendimiento y accesibilidad de la interfaz web.
+
+
+ 1.11. Modelos 3D
+Formato
+¿Lo recomendaría?
+Motivo
+GLB (elegido)
+Sí, primera opción
+Práctico para integrar modelos 3D en la web.
+GLTF (.gltf)
+Sí, como alternativa
+También funciona con Three.js, pero puede depender de archivos externos para texturas y otros recursos.
+OBJ (.obj)
+Como alternativa
+Es común encontrar modelos gratuitos, pero puede requerir trabajo adicional para conservar materiales y texturas.
+FBX (.fbx)
+No como formato final preferido
+Puede servir como formato de origen, pero para tu aplicación web preferiría convertirlo a GLB.
+STL (.stl)
+No como primera opción
+Está orientado principalmente a geometría y no es la opción más práctica para joyas con materiales y acabados visuales.
+1.12. Estructura del Proyecto: Organización de Carpetas 
+Se propone organizar el proyecto en dos partes principales: frontend y backend. El frontend estará desarrollado con React y Vite, mientras que el backend utilizará Node.js y Express. TiDB Cloud almacenará la información estructurada de las joyas, categorías y variantes.
+Los modelos 3D y las imágenes se manejarán como archivos, almacenando en la base de datos sus respectivas referencias.
+
+plataforma-joyeria-ra/
+│
+├── frontend/
+│   ├── public/
+│   │   ├── images/
+│   │   └── icons/
+│   │
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── images/
+│   │   │   └── styles/
+│   │   │
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── ProductCard.jsx
+│   │   │   ├── CategoryFilter.jsx
+│   │   │   └── ColorSelector.jsx
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   ├── Catalog.jsx
+│   │   │   ├── ProductDetails.jsx
+│   │   │   ├── VirtualTryOn.jsx
+│   │   │   ├── AdminLogin.jsx
+│   │   │   └── AdminDashboard.jsx
+│   │   │
+│   │   ├── modules/
+│   │   │   ├── catalog/
+│   │   │   ├── virtual-try-on/
+│   │   │   │   ├── CameraView.jsx
+│   │   │   │   ├── JewelryRenderer.jsx
+│   │   │   │   ├── FaceTracking.js
+│   │   │   │   ├── HandTracking.js
+│   │   │   │   └── PoseTracking.js
+│   │   │   │
+│   │   │   └── administration/
+│   │   │       ├── JewelryManagement.jsx
+│   │   │       ├── CategoryManagement.jsx
+│   │   │       ├── VariantManagement.jsx
+│   │   │       └── Model3DManagement.jsx
+│   │   │
+│   │   ├── services/
+│   │   │   ├── jewelryService.js
+│   │   │   ├── categoryService.js
+│   │   │   ├── variantService.js
+│   │   │   └── model3DService.js
+│   │   │
+│   │   ├── routes/
+│   │   │   └── AppRoutes.jsx
+│   │   │
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── package.json
+│   └── vite.config.js
+│
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── database.js
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── jewelryController.js
+│   │   │   ├── categoryController.js
+│   │   │   ├── variantController.js
+│   │   │   ├── model3DController.js
+│   │   │   └── authController.js
+│   │   │
+│   │   ├── models/
+│   │   │   ├── Jewelry.js
+│   │   │   ├── Category.js
+│   │   │   ├── Variant.js
+│   │   │   └── Model3D.js
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── jewelryRoutes.js
+│   │   │   ├── categoryRoutes.js
+│   │   │   ├── variantRoutes.js
+│   │   │   ├── model3DRoutes.js
+│   │   │   └── authRoutes.js
+│   │   │
+│   │   ├── middlewares/
+│   │   │   └── authMiddleware.js
+│   │   │
+│   │   ├── services/
+│   │   │   ├── jewelryService.js
+│   │   │   └── model3DService.js
+│   │   │
+│   │   ├── app.js
+│   │   └── server.js
+│   │
+│   ├── package.json
+│   └── .env
+│
+├── database/
+│   ├── schema.sql
+│   └── seed.sql
+│
+├── tests/
+│   ├── frontend/
+│   ├── backend/
+│   └── e2e/
+│
+├── docs/
+│   ├── requirements/
+│   ├── diagrams/
+│   └── testing/
+│
+├── .gitignore
+├── README.md
+└── package.json
+1.13. Marco lógico del proyecto
+1.13.1. Matriz del marco lógico
+Resumen narrativo
+Indicadores verificables objetivamente
+Medios de verificación
+Supuestos
+Fin: Contribuir a mejorar la experiencia de los clientes al explorar y evaluar visualmente joyas antes de decidir una posible adquisición.
+Porcentaje de usuarios que manifiestan que la plataforma les facilita visualizar las joyas.
+Encuestas de satisfacción y resultados de pruebas con usuarios.
+Los clientes cuentan con dispositivos compatibles y acceso a internet.
+Propósito: Desarrollar una plataforma web que permita explorar un catálogo de joyas y probarlas virtualmente mediante Realidad Aumentada.
+Plataforma funcional que permita consultar joyas y realizar pruebas virtuales en las categorías implementadas.
+Pruebas funcionales, demostración del sistema y evidencias de uso.
+Se dispone de modelos 3D adecuados y de dispositivos compatibles con la cámara y las tecnologías utilizadas.
+Componente 1: Interfaz pública para explorar el catálogo de joyas.
+Catálogo que presenta las joyas organizadas en las categorías Pulseras, Aretes y Collares.
+Pruebas de navegación y revisión de la interfaz.
+El administrador proporciona información e imágenes de los productos.
+Componente 2: Probador virtual mediante Realidad Aumentada.
+Probador implementado para las categorías contempladas en el alcance del proyecto.
+Pruebas con cámara, modelos 3D y dispositivos reales.
+Los mecanismos de seguimiento permiten detectar las zonas corporales necesarias.
+Componente 3: Gestión administrativa del catálogo.
+Funciones implementadas para registrar, consultar, editar y desactivar joyas, así como gestionar categorías, variantes y modelos 3D.
+Pruebas del panel administrativo y registros de cambios.
+El administrador proporciona información actualizada de los productos.
+Componente 4: Base de datos para almacenar la información de la plataforma.
+Estructura de TiDB Cloud implementada con las entidades necesarias para gestionar joyas, categorías y variantes.
+Esquema de base de datos y pruebas de integración.
+TiDB Cloud se encuentra disponible y correctamente configurado.
+Actividad 1: Diseñar la interfaz pública y administrativa.
+Interfaces diseñadas e implementadas de acuerdo con los módulos definidos.
+Prototipos, capturas de pantalla y revisión funcional.
+Se cuenta con los recursos necesarios para el diseño y desarrollo.
+Actividad 2: Diseñar e implementar la base de datos y las API.
+Base de datos y servicios API disponibles para las operaciones requeridas.
+Esquema SQL y pruebas de API con Postman.
+La conexión entre el backend y TiDB Cloud funciona correctamente.
+Actividad 3: Integrar los modelos 3D y los mecanismos de seguimiento corporal.
+Modelos 3D integrados y mecanismos de seguimiento implementados para las categorías desarrolladas.
+Pruebas del probador virtual y evidencias audiovisuales.
+Los modelos y las bibliotecas utilizadas son compatibles con los dispositivos objetivo.
+Actividad 4: Implementar las funciones de administración.
+Funciones administrativas implementadas y protegidas mediante autenticación.
+Pruebas con credenciales válidas e inválidas.
+Se dispone de credenciales administrativas seguras.
+Actividad 5: Ejecutar pruebas de calidad y corregir errores.
+Casos de prueba ejecutados y resultados documentados; errores identificados y atendidos según su prioridad.
+Reportes de QA, resultados de Playwright, Vitest, Postman, JMeter y Lighthouse.
+Se cuenta con tiempo y dispositivos para ejecutar las pruebas.
+
+1.14. Requisitos del sistema
+Los requisitos se dividen en requisitos funcionales (RF), que describen las acciones que el sistema debe permitir, y requisitos no funcionales (RNF), que establecen condiciones de calidad, seguridad, rendimiento y compatibilidad.
+1.14.1. Requisitos funcionales (RF)
+A. Interfaz pública y catálogo
+ID
+Requisito funcional
+RF-01
+El sistema deberá permitir que los clientes accedan a la página principal sin iniciar sesión.
+RF-02
+El sistema deberá mostrar el catálogo de joyas organizado en las categorías Pulseras, Aretes y Collares.
+RF-03
+El sistema deberá mostrar en cada producto su fotografía, nombre, precio, colores disponibles y descripción breve, según la información registrada.
+RF-04
+El sistema deberá mostrar la disponibilidad comercial de las joyas cuando este dato esté habilitado para su visualización.
+RF-05
+El sistema deberá permitir consultar los detalles de una joya seleccionada.
+RF-06
+El sistema deberá permitir seleccionar una joya para acceder al probador virtual correspondiente a su categoría.
+RF-07
+El sistema deberá mostrar en el probador únicamente las joyas pertenecientes a la categoría seleccionada.
+
+
+B. Probador virtual mediante Realidad Aumentada
+ID
+Requisito funcional
+RF-08
+El sistema deberá solicitar autorización para utilizar la cámara del dispositivo antes de iniciar la visualización en vivo.
+RF-09
+El sistema deberá mostrar la imagen capturada por la cámara cuando el usuario conceda el permiso correspondiente.
+RF-10
+El sistema deberá utilizar mecanismos de seguimiento adecuados para detectar la zona corporal asociada con la categoría de la joya seleccionada.
+RF-11
+El sistema deberá cargar y representar el modelo 3D de la joya seleccionada sobre la zona corporal correspondiente.
+RF-12
+El sistema deberá permitir seleccionar otra joya de la misma categoría desde la interfaz del probador.
+RF-13
+El sistema deberá actualizar la joya visualizada cuando el cliente seleccione otro modelo, sin obligarlo a regresar al catálogo principal.
+RF-14
+El sistema deberá permitir seleccionar las variantes de color disponibles para una joya.
+RF-15
+El sistema deberá actualizar la apariencia del modelo 3D cuando el cliente seleccione una variante de color.
+RF-16
+El sistema deberá permitir regresar desde el probador virtual al catálogo principal.
+RF-17
+El sistema deberá informar al cliente cuando no se conceda el permiso de cámara o cuando no sea posible iniciar la visualización.
+
+
+C. Panel administrativo
+ID
+Requisito funcional
+RF-18
+El sistema deberá permitir que el administrador inicie sesión mediante credenciales válidas.
+RF-19
+El sistema deberá restringir el acceso a las funciones administrativas a usuarios autenticados y autorizados.
+RF-20
+El sistema deberá permitir registrar nuevas joyas con sus datos correspondientes.
+RF-21
+El sistema deberá permitir consultar y editar la información de las joyas registradas.
+RF-22
+El sistema deberá permitir desactivar joyas para que dejen de mostrarse en el catálogo público.
+RF-23
+El sistema deberá permitir gestionar las categorías de las joyas.
+RF-24
+El sistema deberá permitir registrar y actualizar las variantes de las joyas, incluyendo sus colores y características.
+RF-25
+El sistema deberá permitir administrar la disponibilidad comercial de las joyas cuando esta funcionalidad sea implementada.
+RF-26
+El sistema deberá permitir registrar y actualizar modelos 3D.
+RF-27
+El sistema deberá permitir asociar los modelos 3D con las joyas y variantes correspondientes.
+RF-28
+El sistema deberá permitir que el administrador cierre su sesión.
+
+1.14.2. Requisitos no funcionales (RNF)
+ID
+Categoría
+Requisito no funcional
+RNF-01
+Usabilidad
+La interfaz deberá presentar una navegación clara que permita al cliente acceder al catálogo y al probador virtual sin necesidad de capacitación previa.
+RNF-02
+Usabilidad
+Los controles para cambiar de joya, seleccionar variantes y regresar al catálogo deberán ser visibles y comprensibles.
+RNF-03
+Rendimiento
+La plataforma deberá optimizar la carga de imágenes y modelos 3D para reducir los tiempos de espera durante la navegación y la prueba virtual.
+RNF-04
+Rendimiento
+El sistema deberá mantener una respuesta adecuada durante las consultas al catálogo y las operaciones administrativas bajo las condiciones de carga definidas para las pruebas.
+RNF-05
+Compatibilidad
+La interfaz deberá adaptarse a diferentes tamaños de pantalla, incluyendo dispositivos móviles y computadoras.
+RNF-06
+Compatibilidad
+El probador virtual deberá funcionar en navegadores y dispositivos compatibles con las tecnologías de cámara y renderizado utilizadas.
+RNF-07
+Seguridad
+Las funciones administrativas deberán estar protegidas mediante autenticación y controles de autorización.
+RNF-08
+Seguridad
+Las credenciales y los datos de conexión a la base de datos no deberán exponerse en el código público del frontend.
+RNF-09
+Privacidad
+La plataforma deberá solicitar autorización antes de utilizar la cámara del dispositivo.
+RNF-10
+Privacidad
+La plataforma deberá informar al usuario sobre el uso de la cámara y evitar capturar o almacenar imágenes del usuario si esa funcionalidad no forma parte del alcance autorizado.
+RNF-11
+Mantenibilidad
+El código deberá organizarse en componentes, módulos y servicios para facilitar su mantenimiento y futuras modificaciones.
+RNF-12
+Mantenibilidad
+La información de las joyas, variantes y modelos 3D deberá gestionarse de manera que se puedan actualizar los productos sin modificar innecesariamente la lógica de visualización.
+RNF-13
+Calidad
+El sistema deberá someterse a pruebas unitarias, funcionales, de integración y de rendimiento, de acuerdo con el plan de QA.
+RNF-14
+Calidad visual
+Los modelos 3D deberán prepararse considerando su escala, orientación, materiales y nivel de detalle para favorecer una visualización adecuada.
+RNF-15
+Disponibilidad
+La plataforma deberá mostrar mensajes comprensibles cuando un servicio necesario no esté disponible o se produzca un error durante la carga de un recurso.
+
+Consideración importante sobre los RNF:
+Los requisitos relacionados con rendimiento, compatibilidad y precisión de la Realidad Aumentada deberán validarse mediante pruebas. No conviene afirmar que la plataforma funcionará en todos los dispositivos o que posicionará las joyas con precisión absoluta, porque eso dependerá del hardware, el navegador, la iluminación, los modelos 3D y los mecanismos de seguimiento utilizados.
+
+
+
+Posible Distribución de trabajo:
+Integrante
+Rol principal
+Responsabilidades
+Integrante 1
+RA
+Interfaz web, catálogo, detalles de joyas, probador virtual, cámara, integración de Three.js y MediaPipe.
+Integrante 2
+Desarrollador Frontend (cliente)
+Desarrollador Backend + Base de Datos
+API, lógica del sistema, TiDB Cloud, autenticación del administrador y conexión frontend-backend.
+Integrante 3
+Desarrollador Frontend (Administrador)
+QA + Recursos 3D 
+Pruebas, casos de prueba, búsqueda/preparación de modelos 3D, validación del probador y documentación de errores.
+
+
+
