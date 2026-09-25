@@ -1,0 +1,96 @@
+/* frontend/src/assets/styles/admin/AdminDashboard.css */
+
+.admin-dashboard-container {
+    background-color: #FAFAFA;
+    min-height: 100vh;
+    padding: 60px 20px;
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 60px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.admin-title {
+    font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+    font-size: 2.5rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: #1A1A1A;
+}
+
+.admin-subtitle {
+    font-family: "Didot", "Bodoni MT", serif;
+    color: #595959;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    font-size: 1.1rem;
+}
+
+.admin-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.admin-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    padding: 40px 30px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.admin-card-secondary {
+    background-color: #F5F5F5;
+}
+
+.admin-card-title {
+    font-family: "Didot", "Bodoni MT", serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    color: #1A1A1A;
+}
+
+.admin-card-description {
+    font-size: 0.9rem;
+    color: #7A736E;
+    line-height: 1.5;
+}
+
+.admin-logout-button {
+    font-family: "Montserrat", sans-serif;
+    padding: 10px 20px;
+    background-color: transparent;
+    color: #1A1A1A;
+    border: 1px solid #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-logout-button:hover {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+}

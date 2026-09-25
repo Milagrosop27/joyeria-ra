@@ -1,0 +1,262 @@
+/* frontend/src/assets/styles/admin/AdminJewelry.css */
+
+.admin-container {
+    background-color: #ecece5;
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    color: #0d0500;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.admin-title {
+    font-family: "Didot", "Bodoni MT", serif;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1A1A1A;
+}
+
+.admin-back-button {
+    font-family: "Montserrat", sans-serif;
+    padding: 10px 20px;
+    background-color: transparent;
+    color: #1A1A1A;
+    border: 1px solid #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-back-button:hover {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+}
+
+.admin-add-button {
+    font-family: "Montserrat", sans-serif;
+    padding: 12px 24px;
+    background-color: #715605;
+    color: #FFFFFF;
+    border: 1px solid #715605;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-add-button:hover {
+    background-color: #eadeb8;
+    color: #1A1A1A;
+    border-color: #eadeb8;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-item-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.admin-item-info {
+    margin-bottom: 20px;
+}
+
+.admin-item-name {
+    font-family: "Didot", "Bodoni MT", serif;
+    font-size: 1.3rem;
+    margin: 0 0 10px 0;
+    color: #1A1A1A;
+}
+
+.admin-item-price {
+    font-weight: 400;
+    color: #1A1A1A;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.admin-item-desc {
+    font-size: 0.9rem;
+    color: #7A736E;
+    line-height: 1.5;
+}
+
+.admin-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-edit-button {
+    flex: 1;
+    font-family: "Montserrat", sans-serif;
+    padding: 10px 0;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    border: 1px solid #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-edit-button:hover {
+    background-color: #FFFFFF;
+    color: #1A1A1A;
+}
+
+.admin-delete-button {
+    flex: 1;
+    font-family: "Montserrat", sans-serif;
+    padding: 10px 0;
+    background-color: #8B0000;
+    color: #FFFFFF;
+    border: 1px solid #8B0000;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-delete-button:hover {
+    background-color: #FFFFFF;
+    color: #8B0000;
+}
+
+.admin-form-container {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    padding: 40px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.admin-form-title {
+    font-family: "Didot", "Bodoni MT", serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    color: #1A1A1A;
+    text-align: center;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-form-group label {
+    font-family: "Montserrat", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1A1A1A;
+    letter-spacing: 0.05em;
+}
+
+.admin-form-group input,
+.admin-form-group select,
+.admin-form-group textarea {
+    padding: 12px;
+    border: 1px solid #EAEAEA;
+    font-family: "Montserrat", sans-serif;
+    font-size: 0.95rem;
+    color: #1A1A1A;
+    transition: border-color 0.3s ease;
+}
+
+.admin-form-group input:focus,
+.admin-form-group select:focus,
+.admin-form-group textarea:focus {
+    outline: none;
+    border-color: #715605;
+}
+
+.admin-form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.admin-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.admin-cancel-button {
+    flex: 1;
+    font-family: "Montserrat", sans-serif;
+    padding: 12px 0;
+    background-color: transparent;
+    color: #1A1A1A;
+    border: 1px solid #1A1A1A;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-cancel-button:hover {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+}
+
+.admin-submit-button {
+    flex: 1;
+    font-family: "Montserrat", sans-serif;
+    padding: 12px 0;
+    background-color: #715605;
+    color: #FFFFFF;
+    border: 1px solid #715605;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-submit-button:hover {
+    background-color: #eadeb8;
+    color: #1A1A1A;
+    border-color: #eadeb8;
+}
