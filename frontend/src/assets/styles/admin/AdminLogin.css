@@ -1,0 +1,108 @@
+/* frontend/src/assets/styles/admin/AdminLogin.css */
+
+.admin-login-container {
+    background-color: #FAFAFA;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+}
+
+.admin-login-wrapper {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    padding: 60px 40px;
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+}
+
+.admin-login-title {
+    font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: #1A1A1A;
+}
+
+.admin-login-subtitle {
+    font-family: "Didot", "Bodoni MT", serif;
+    color: #595959;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+.admin-login-error {
+    color: #8B0000;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #FFF5F5;
+    border: 1px solid #FFCCCC;
+}
+
+.admin-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.admin-form-group label {
+    font-family: "Montserrat", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1A1A1A;
+    letter-spacing: 0.05em;
+}
+
+.admin-form-group input {
+    padding: 14px;
+    border: 1px solid #EAEAEA;
+    font-family: "Montserrat", sans-serif;
+    font-size: 0.95rem;
+    color: #1A1A1A;
+    transition: border-color 0.3s ease;
+}
+
+.admin-form-group input:focus {
+    outline: none;
+    border-color: #715605;
+}
+
+.admin-form-group input::placeholder {
+    color: #A3A3A3;
+}
+
+.admin-login-button {
+    font-family: "Montserrat", sans-serif;
+    padding: 15px 0;
+    background-color: #715605;
+    color: #FFFFFF;
+    border: 1px solid #715605;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.admin-login-button:hover {
+    background-color: #eadeb8;
+    color: #1A1A1A;
+    border-color: #eadeb8;
+}
