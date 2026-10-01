@@ -9,6 +9,8 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
   const rendererRef = useRef(null);
   const modelRef = useRef(null);
 
+  const API_URL = 'http://localhost:3000';
+
   useEffect(() => {
     console.log('JewelryRenderer useEffect ejecutado, modelUrl:', modelUrl);
     if (!containerRef.current) {
@@ -36,14 +38,26 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
       antialias: true,
       alpha: true,
       premultipliedAlpha: false,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: false
     });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(0x000000, 0); // Fondo completamente transparente
-    renderer.domElement.style.backgroundColor = 'transparent';
-    renderer.domElement.style.background = 'none';
-    renderer.domElement.style.opacity = '1';
-    containerRef.current.appendChild(renderer.domElement);
+    
+    // Crear canvas directamente con estilos de transparencia
+    const canvas = renderer.domElement;
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.backgroundColor = 'transparent';
+    canvas.style.background = 'none';
+    canvas.style.opacity = '1';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.display = 'block';
+    
+    containerRef.current.appendChild(canvas);
     rendererRef.current = renderer;
     console.log('Renderizador Three.js inicializado');
 
@@ -65,15 +79,27 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
     // Cargar modelo 3D si hay URL
     console.log('Verificando carga de modelo: modelUrl:', modelUrl);
     if (modelUrl) {
-      console.log('Iniciando carga de modelo:', modelUrl);
+      const fullModelUrl = modelUrl.startsWith('http') ? modelUrl : `${API_URL}${modelUrl}`;
+      console.log('Iniciando carga de modelo:', fullModelUrl);
+      
+      // Ocultar canvas inicialmente
+      if (renderer.domElement) {
+        renderer.domElement.style.opacity = '0';
+      }
+      
       const loader = new GLTFLoader();
       loader.load(
-        modelUrl,
+        fullModelUrl,
         (gltf) => {
           console.log('Modelo cargado exitosamente:', gltf);
           const model = gltf.scene;
           modelRef.current = model;
           scene.add(model);
+          
+          // Mostrar canvas cuando el modelo se carga
+          if (renderer.domElement) {
+            renderer.domElement.style.opacity = '1';
+          }
           
           if (onModelLoaded) {
             onModelLoaded(model);
@@ -111,7 +137,18 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
   // Actualizar posición del modelo en tiempo real
   useEffect(() => {
     if (!modelRef.current || !position) return;
-    modelRef.current.position.set(position.x, position.y, position.z);
+    
+    // Convertir coordenadas normalizadas (0-1) a coordenadas de pantalla
+    const containerWidth = containerRef.current?.clientWidth || 640;
+    const containerHeight = containerRef.current?.clientHeight || 480;
+    
+    // MediaPipe devuelve coordenadas 0-1 (izquierda-derecha, arriba-abajo)
+    // Three.js usa coordenadas centradas (-1 a 1)
+    const x = (position.x - 0.5) * 2;
+    const y = -(position.y - 0.5) * 2; // Invertir Y para Three.js
+    const z = position.z * 2;
+    
+    modelRef.current.position.set(x, y, z);
   }, [position]);
 
   // Actualizar rotación del modelo en tiempo real
@@ -123,7 +160,7 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
   // Actualizar escala del modelo en tiempo real
   useEffect(() => {
     if (!modelRef.current || !scale) return;
-    modelRef.current.scale.set(scale, scale, scale);
+    modelRef.current.scale.set(scale.x, scale.y, scale.z);
   }, [scale]);
 
   return (
@@ -136,7 +173,10 @@ const JewelryRenderer = ({ modelUrl, position, rotation, scale, onModelLoaded })
         left: 0,
         width: '100%',
         height: '100%',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        zIndex: 2,
+        background: 'transparent !important',
+        backgroundColor: 'transparent !important'
       }}
     />
   );

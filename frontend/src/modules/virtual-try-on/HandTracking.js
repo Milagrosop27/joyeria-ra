@@ -99,10 +99,11 @@ class HandTracking {
     // Rotación Z (roll) - basada en la inclinación de la mano
     const roll = Math.atan2(middleFinger.y - wrist.y, middleFinger.x - wrist.x);
 
+    // Convertir a grados para model-viewer
     return {
-      x: pitch,
-      y: yaw,
-      z: roll
+      x: pitch * (180 / Math.PI),
+      y: yaw * (180 / Math.PI),
+      z: roll * (180 / Math.PI)
     };
   }
 

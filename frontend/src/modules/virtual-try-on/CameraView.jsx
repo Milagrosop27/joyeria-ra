@@ -1,9 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 
-const CameraView = ({ onVideoReady, onError }) => {
+const CameraView = memo(({ onVideoReady, onError }) => {
   const videoRef = useRef(null);
   const [isStreamActive, setIsStreamActive] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Usar refs para los callbacks para evitar que el useEffect se re-ejecute
+  const onVideoReadyRef = useRef(onVideoReady);
+  const onErrorRef = useRef(onError);
+  
+  useEffect(() => {
+    onVideoReadyRef.current = onVideoReady;
+    onErrorRef.current = onError;
+  }, [onVideoReady, onError]);
 
   useEffect(() => {
     let stream = null;
@@ -23,8 +32,8 @@ const CameraView = ({ onVideoReady, onError }) => {
           videoRef.current.onloadedmetadata = () => {
             videoRef.current.play();
             setIsStreamActive(true);
-            if (onVideoReady) {
-              onVideoReady(videoRef.current);
+            if (onVideoReadyRef.current) {
+              onVideoReadyRef.current(videoRef.current);
             }
           };
         }
@@ -32,8 +41,8 @@ const CameraView = ({ onVideoReady, onError }) => {
         console.error('Error accediendo a la cámara:', err);
         setError('No se pudo acceder a la cámara. Verifica los permisos.');
         setIsStreamActive(false);
-        if (onError) {
-          onError(err);
+        if (onErrorRef.current) {
+          onErrorRef.current(err);
         }
       }
     };
@@ -45,10 +54,10 @@ const CameraView = ({ onVideoReady, onError }) => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [onVideoReady, onError]);
+  }, []); // Sin dependencias - solo se ejecuta una vez
 
   return (
-    <div className="camera-container">
+    <div className="camera-container" style={{ width: '100%', height: '100%', position: 'relative' }}>
       {error && (
         <div className="camera-error">
           <p>{error}</p>
@@ -64,7 +73,8 @@ const CameraView = ({ onVideoReady, onError }) => {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          transform: 'scaleX(-1)' // Espejo para experiencia natural
+          transform: 'scaleX(-1)', // Espejo para experiencia natural
+          display: isStreamActive ? 'block' : 'none'
         }}
       />
       {!isStreamActive && !error && (
@@ -74,6 +84,6 @@ const CameraView = ({ onVideoReady, onError }) => {
       )}
     </div>
   );
-};
+});
 
 export default CameraView;

@@ -3,7 +3,7 @@ const cors = require('cors');
 
 // Importar las rutas
 const jewelryRoutes = require('./routes/jewelryRoutes');
-const authRoutes = require('./routes/authRoutes'); 
+const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const variantRoutes = require('./routes/variantRoutes');
 const model3DRoutes = require('./routes/model3DRoutes');
@@ -12,7 +12,8 @@ const app = express();
 
 // Middlewares globales
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static('public/uploads'));
 app.use('/models', express.static('public/models'));
 
