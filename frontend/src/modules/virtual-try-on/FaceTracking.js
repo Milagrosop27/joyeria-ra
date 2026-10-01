@@ -61,9 +61,9 @@ class FaceTracking {
   getEarPositions(landmarks) {
     if (!landmarks || landmarks.length === 0) return null;
 
-    // Índices de landmarks para orejas en MediaPipe Face Mesh
-    // Oreja izquierda: 234, 132
-    // Oreja derecha: 454, 361
+    // Índices de landmarks para lóbulos de orejas en MediaPipe Face Mesh
+    // Lóbulo oreja izquierda: 234
+    // Lóbulo oreja derecha: 454
 
     const leftEar = {
       x: landmarks[234].x,
@@ -76,6 +76,9 @@ class FaceTracking {
       y: landmarks[454].y,
       z: landmarks[454].z
     };
+
+    console.log('Posición oreja izquierda:', leftEar);
+    console.log('Posición oreja derecha:', rightEar);
 
     return {
       left: leftEar,
@@ -101,10 +104,11 @@ class FaceTracking {
     // Rotación Z (roll) - basada en la inclinación de la cara
     const roll = Math.atan2(leftCheek.y - rightCheek.y, leftCheek.x - rightCheek.x);
 
+    // Convertir a grados para model-viewer
     return {
-      x: pitch,
-      y: yaw,
-      z: roll
+      x: pitch * (180 / Math.PI),
+      y: yaw * (180 / Math.PI),
+      z: roll * (180 / Math.PI)
     };
   }
 
