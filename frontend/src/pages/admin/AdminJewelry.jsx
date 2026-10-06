@@ -17,8 +17,6 @@ const AdminJewelry = () => {
         category_id: '',
         price: '',
         short_description: '',
-        variant_name: '',
-        variant_hex_code: '#000000',
         glb_file: '',
         file_size_kb: 0
     });
@@ -125,8 +123,6 @@ const AdminJewelry = () => {
                 category_id: '',
                 price: '',
                 short_description: '',
-                variant_name: '',
-                variant_hex_code: '#000000',
                 glb_file: '',
                 file_size_kb: 0
             });
@@ -355,29 +351,6 @@ const AdminJewelry = () => {
                             value={formData.short_description}
                             onChange={handleInputChange}
                             className="admin-form-textarea"
-                        />
-                    </div>
-
-                    <div className="admin-form-group">
-                        <label className="admin-form-label">Nombre de Variante</label>
-                        <input
-                            type="text"
-                            name="variant_name"
-                            value={formData.variant_name}
-                            onChange={handleInputChange}
-                            required
-                            className="admin-form-input"
-                        />
-                    </div>
-
-                    <div className="admin-form-group">
-                        <label className="admin-form-label">Color de Variante</label>
-                        <input
-                            type="color"
-                            name="variant_hex_code"
-                            value={formData.variant_hex_code}
-                            onChange={handleInputChange}
-                            style={{ width: '100px', height: '40px', marginTop: '5px' }}
                         />
                     </div>
 

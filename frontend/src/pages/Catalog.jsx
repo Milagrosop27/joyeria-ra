@@ -103,8 +103,8 @@ const Catalog = () => {
                         
                         {/* Imagen de la joya */}
                         {jewelry.image_url ? (
-                            <img 
-                                src={`${API_URL}${jewelry.image_url}`} 
+                            <img
+                                src={jewelry.image_url.startsWith('data:') ? jewelry.image_url : `${API_URL}${jewelry.image_url}`}
                                 alt={jewelry.name}
                                 className="product-image"
                                 onError={(e) => {

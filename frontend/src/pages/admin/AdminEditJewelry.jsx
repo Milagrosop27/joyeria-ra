@@ -17,6 +17,7 @@ const AdminEditJewelry = () => {
         is_active: 1
     });
     const [imageFile, setImageFile] = useState(null);
+    const [currentImageUrl, setCurrentImageUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [initialLoading, setInitialLoading] = useState(true);
@@ -45,6 +46,7 @@ const AdminEditJewelry = () => {
                 short_description: data.short_description || '',
                 is_active: data.is_active !== undefined ? data.is_active : 1
             });
+            setCurrentImageUrl(data.image_url || '');
         } catch (error) {
             console.error('Error cargando joya:', error);
             setMessage('Error al cargar la joya');
@@ -176,6 +178,22 @@ const AdminEditJewelry = () => {
                             onChange={handleImageChange}
                             className="admin-form-file"
                         />
+                        {currentImageUrl && (
+                            <div style={{ marginTop: '10px' }}>
+                                <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>Imagen actual:</p>
+                                <img
+                                    src={currentImageUrl}
+                                    alt="Imagen actual de la joya"
+                                    style={{
+                                        maxWidth: '200px',
+                                        maxHeight: '200px',
+                                        objectFit: 'contain',
+                                        border: '1px solid #D4AF37',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <button

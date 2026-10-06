@@ -118,28 +118,92 @@ class PoseTracking {
     };
   }
 
-  // Pose de collar en coordenadas de pantalla (ya espejadas como el video)
-  getNecklaceFit(landmarks) {
-    const neck = this.getNeckPosition(landmarks);
-    if (!neck) return null;
+  // Calcular dos puntos de anclaje del cuello (izquierdo y derecho)
+  // Los extremos superiores de la cadena deben tocar estos puntos
+  getNeckAnchorPoints(landmarks, config = {}) {
+    if (!landmarks || landmarks.length < 13) {
+      return null;
+    }
 
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
-    const visualLeft = leftShoulder.x <= rightShoulder.x ? leftShoulder : rightShoulder;
-    const visualRight = leftShoulder.x <= rightShoulder.x ? rightShoulder : leftShoulder;
+    const nose = landmarks[0];
 
-    const roll =
-      Math.atan2(visualRight.y - visualLeft.y, visualRight.x - visualLeft.x) * (180 / Math.PI);
+    if (!leftShoulder || !rightShoulder) {
+      return null;
+    }
 
-    const span = Math.hypot(
+    const leftVis = leftShoulder.visibility ?? 1;
+    const rightVis = rightShoulder.visibility ?? 1;
+    if (leftVis < 0.3 || rightVis < 0.3) {
+      return null;
+    }
+
+    // Parámetros de calibración (ajustables vía debug)
+    const anchorHeightPercent = config.anchorHeightPercent ?? 0.65; // 60-70% desde boca a hombros
+    const anchorLateralPercent = config.anchorLateralPercent ?? 0.28; // 25-30% del ancho de hombros
+
+    // Calcular centro de hombros
+    const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
+    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
+
+    // Posición de la cara (nariz/boca)
+    const faceY = nose ? nose.y : shoulderMidY - 0.12;
+    const faceX = nose ? nose.x : shoulderMidX;
+
+    // Altura del anclaje: entre la cara y los hombros
+    const anchorY = faceY + (shoulderMidY - faceY) * anchorHeightPercent;
+
+    // Ancho de hombros
+    const shoulderWidth = Math.hypot(
       rightShoulder.x - leftShoulder.x,
       rightShoulder.y - leftShoulder.y
     );
 
+    // Distancia lateral desde el centro
+    const lateralOffset = shoulderWidth * anchorLateralPercent;
+
+    // Punto izquierdo y derecho del cuello
+    const leftAnchor = {
+      x: shoulderMidX - lateralOffset,
+      y: anchorY,
+      z: ((leftShoulder.z ?? 0) + (rightShoulder.z ?? 0)) / 2
+    };
+
+    const rightAnchor = {
+      x: shoulderMidX + lateralOffset,
+      y: anchorY,
+      z: ((leftShoulder.z ?? 0) + (rightShoulder.z ?? 0)) / 2
+    };
+
     return {
-      position: neck,
+      left: leftAnchor,
+      right: rightAnchor,
+      center: {
+        x: shoulderMidX,
+        y: anchorY,
+        z: ((leftShoulder.z ?? 0) + (rightShoulder.z ?? 0)) / 2
+      },
+      span: shoulderWidth
+    };
+  }
+
+  // Pose de collar en coordenadas de pantalla (ya espejadas como el video)
+  getNecklaceFit(landmarks, config = {}) {
+    const anchorPoints = this.getNeckAnchorPoints(landmarks, config);
+    if (!anchorPoints) return null;
+
+    const { left, right, center, span } = anchorPoints;
+
+    // Calcular rotación basada en la inclinación de los puntos de anclaje
+    const roll =
+      Math.atan2(right.y - left.y, right.x - left.x) * (180 / Math.PI);
+
+    return {
+      position: center,
       rotation: { x: 0, y: 0, z: roll },
-      span
+      span,
+      anchorPoints: { left, right }
     };
   }
 

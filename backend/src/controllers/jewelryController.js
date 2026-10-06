@@ -3,23 +3,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Configuración de multer para subir imágenes
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = 'public/uploads/images/';
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ 
-    storage,
+// Configuración de multer para subir imágenes (en memoria para guardar como BLOB en BD)
+const upload = multer({
+    storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -30,6 +16,9 @@ const upload = multer({
         cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, webp)'));
     }
 });
+
+// Middleware para manejar archivos opcionales
+const uploadOptional = upload.any();
 
 // Configuración de multer para subir archivos GLB
 const glbStorage = multer.diskStorage({
@@ -66,7 +55,20 @@ const getJewelryCatalog = async (req, res) => {
     try {
         // Obtenemos solo las joyas activas para el catálogo del cliente
         const [rows] = await pool.query('SELECT * FROM Jewelry WHERE is_active = 1');
-        res.json(rows);
+
+        // Convertir image_data (BLOB) a base64 para cada joya
+        const rowsWithBase64 = rows.map(jewelry => {
+            if (jewelry.image_data) {
+                const base64 = jewelry.image_data.toString('base64');
+                // Determinar el tipo MIME basado en los datos o usar jpeg por defecto
+                const mimeType = 'image/jpeg';
+                jewelry.image_url = `data:${mimeType};base64,${base64}`;
+                delete jewelry.image_data;
+            }
+            return jewelry;
+        });
+
+        res.json(rowsWithBase64);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener el catálogo' });
     }
@@ -76,32 +78,26 @@ const getJewelryById = async (req, res) => {
     try {
         const [jewelryRows] = await pool.query('SELECT * FROM Jewelry WHERE id = ?', [req.params.id]);
         if (jewelryRows.length === 0) return res.status(404).json({ error: 'Joya no encontrada' });
-        
+
         const jewelry = jewelryRows[0];
-        
-        // Obtener variantes de la joya
-        const [variantRows] = await pool.query(
-            'SELECT * FROM Variants WHERE jewelry_id = ? AND is_active = 1',
+
+        // Convertir image_data (BLOB) a base64
+        if (jewelry.image_data) {
+            const base64 = jewelry.image_data.toString('base64');
+            const mimeType = 'image/jpeg';
+            jewelry.image_url = `data:${mimeType};base64,${base64}`;
+            delete jewelry.image_data;
+        }
+
+        // Obtener modelos 3D directamente de la joya
+        const [modelRows] = await pool.query(
+            'SELECT * FROM Models3D WHERE jewelry_id = ?',
             [req.params.id]
         );
-        
-        // Para cada variante, obtener sus modelos 3D
-        const variantsWithModels = await Promise.all(
-            variantRows.map(async (variant) => {
-                const [modelRows] = await pool.query(
-                    'SELECT * FROM Models3D WHERE variant_id = ?',
-                    [variant.id]
-                );
-                return {
-                    ...variant,
-                    models3d: modelRows
-                };
-            })
-        );
-        
+
         res.json({
             ...jewelry,
-            variants: variantsWithModels
+            models3d: modelRows
         });
     } catch (error) {
         console.error('Error al obtener la joya:', error);
@@ -135,22 +131,22 @@ const uploadGLBFile = async (req, res) => {
 
 const createJewelry = async (req, res) => {
     const connection = await pool.getConnection();
-    
+
     try {
         await connection.beginTransaction();
 
-        const { name, category_id, price, short_description, variant_name, variant_hex_code, glb_file, file_size_kb } = req.body;
+        const { name, category_id, price, short_description, glb_file, file_size_kb } = req.body;
 
         // Validar campos requeridos
-        if (!name || !category_id || !price || !variant_name || !variant_hex_code || !glb_file) {
+        if (!name || !category_id || !price || !glb_file) {
             await connection.rollback();
-            return res.status(400).json({ error: 'Faltan campos requeridos' });
+            return res.status(400).json({ error: 'Faltan campos requeridos: name, category_id, price, glb_file' });
         }
 
-        // Subir imagen si se proporciona
-        let image_url = null;
+        // Subir imagen si se proporciona (como BLOB en BD)
+        let image_data = null;
         if (req.file) {
-            image_url = `/uploads/images/${req.file.filename}`;
+            image_data = req.file.buffer;
         }
 
         // Generar unique_id para la joya
@@ -158,24 +154,16 @@ const createJewelry = async (req, res) => {
 
         // Insertar joya
         const [jewelryResult] = await connection.query(
-            'INSERT INTO Jewelry (unique_id, name, category_id, price, short_description, image_url, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
-            [unique_id, name, category_id, price, short_description, image_url]
+            'INSERT INTO Jewelry (unique_id, name, category_id, price, short_description, image_data, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+            [unique_id, name, category_id, price, short_description, image_data]
         );
 
         const jewelry_id = jewelryResult.insertId;
 
-        // Insertar variante
-        const [variantResult] = await connection.query(
-            'INSERT INTO Variants (jewelry_id, name, hex_code, is_active) VALUES (?, ?, ?, 1)',
-            [jewelry_id, variant_name, variant_hex_code]
-        );
-
-        const variant_id = variantResult.insertId;
-
-        // Insertar modelo 3D (valores por defecto para escala y rotación)
+        // Insertar modelo 3D directamente (sin variante)
         const [modelResult] = await connection.query(
-            'INSERT INTO Models3D (variant_id, file_url, file_size_kb, scale_factor, rotation_x, rotation_y, rotation_z) VALUES (?, ?, ?, 1, 0, 0, 0)',
-            [variant_id, glb_file, file_size_kb || 0]
+            'INSERT INTO Models3D (jewelry_id, file_url, file_size_kb, scale_factor, rotation_x, rotation_y, rotation_z) VALUES (?, ?, ?, 1, 0, 0, 0)',
+            [jewelry_id, glb_file, file_size_kb || 0]
         );
 
         await connection.commit();
@@ -184,7 +172,6 @@ const createJewelry = async (req, res) => {
             message: 'Joya registrada exitosamente',
             jewelry_id,
             unique_id,
-            image_url,
             model_url: glb_file
         });
 
@@ -206,18 +193,28 @@ const updateJewelry = async (req, res) => {
         const { id } = req.params;
         const { name, category_id, price, short_description, is_active } = req.body;
 
+        console.log('Actualizando joya ID:', id);
+        console.log('Datos recibidos:', { name, category_id, price, short_description, is_active });
+        console.log('Archivo recibido:', req.file);
+
+        // Validar campos requeridos
+        if (!name || !category_id || !price) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Faltan campos requeridos: name, category_id, price' });
+        }
+
         // Actualizar joya
         await connection.query(
             'UPDATE Jewelry SET name = ?, category_id = ?, price = ?, short_description = ?, is_active = ? WHERE id = ?',
             [name, category_id, price, short_description, is_active !== undefined ? is_active : 1, id]
         );
 
-        // Si se sube una nueva imagen, actualizar la URL
+        // Si se sube una nueva imagen, actualizar como BLOB
         if (req.file) {
-            const image_url = `/uploads/images/${req.file.filename}`;
+            const image_data = req.file.buffer;
             await connection.query(
-                'UPDATE Jewelry SET image_url = ? WHERE id = ?',
-                [image_url, id]
+                'UPDATE Jewelry SET image_data = ? WHERE id = ?',
+                [image_data, id]
             );
         }
 
@@ -228,7 +225,7 @@ const updateJewelry = async (req, res) => {
     } catch (error) {
         await connection.rollback();
         console.error('Error al actualizar joya:', error);
-        res.status(500).json({ error: 'Error al actualizar la joya' });
+        res.status(500).json({ error: 'Error al actualizar la joya', details: error.message });
     } finally {
         connection.release();
     }
@@ -263,6 +260,7 @@ module.exports = {
     updateJewelry,
     deactivateJewelry,
     upload,
+    uploadOptional,
     uploadGLB,
     uploadGLBFile
 };

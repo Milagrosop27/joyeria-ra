@@ -17,12 +17,15 @@ const VirtualTryOn = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef(null);
+
+  // Detectar modo debug desde URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const isDebugMode = urlParams.get('debug') === '1';
   
   const [jewelry, setJewelry] = useState(null);
   const [category, setCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const [allCategoryJewelries, setAllCategoryJewelries] = useState([]);
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -39,6 +42,35 @@ const VirtualTryOn = () => {
   const modelPositionRef = useRef({ x: 0.5, y: 0.5, z: 0 });
   const modelRotationRef = useRef({ x: 0, y: 0, z: 0 });
   const modelScaleRef = useRef({ x: 1, y: 1, z: 1 });
+
+  // Puntos de anclaje del collar (para debug)
+  const anchorPointsRef = useRef({ left: null, right: null });
+
+  // Posiciones de las orejas para aretes (izquierda y derecha)
+  const earPositionsRef = useRef({ left: null, right: null });
+  const earlobePositionsRef = useRef({ left: null, right: null, faceWidth: 0 });
+  const smoothedLobePositionsRef = useRef({ left: null, right: null, faceWidth: 0 });
+  const smoothedScaleRef = useRef(0);
+  const poseResultsRef = useRef(null); // Para guardar resultados de Pose en modo aretes
+
+  // Constante para ajuste lateral de aretes (fácil de editar)
+  const EAR_OFFSET_X = 0.06; // 6% del ancho de cara hacia afuera
+
+  // Sliders de debug (collares y aretes)
+  const [debugConfig, setDebugConfig] = useState({
+    anchorHeightPercent: 0.65,
+    anchorLateralPercent: 0.28,
+    scaleY: 1.0,
+    offsetX: 0,
+    offsetY: 0,
+    cutOffset: 0, // Offset del corte en px respecto al punto del cuello (negativo = subir, positivo = bajar)
+    noseLipHeightPercent: 0.5, // Altura del lóbulo (% entre nariz y labio)
+    lateralOffsetPercent: EAR_OFFSET_X, // Separación lateral del lóbulo (% del ancho de cara)
+    earringLobeDropPercent: 0.20, // Bajada al lóbulo desde Pose landmarks (% del alto de cara)
+    earringSizePercent: 0.225, // Tamaño del arete (% del alto de la cara)
+    earringOffsetX: 0, // Offset X para aretes
+    earringOffsetY: 0 // Offset Y para aretes
+  });
   
   // Estado solo para inicialización y cambios importantes
   const [modelPosition, setModelPosition] = useState({ x: 0.5, y: 0.5, z: 0 });
@@ -53,6 +85,11 @@ const VirtualTryOn = () => {
   const [showDebug, setShowDebug] = useState(true);
   const trackingStatusRef = useRef('Inicializando...');
   const [trackingStatus, setTrackingStatus] = useState('Inicializando...'); // Solo para inicial
+
+  // Refs para suavizado de pulsera
+  const smoothedBraceletPositionRef = useRef(null);
+  const smoothedBraceletScaleRef = useRef(null);
+  const smoothedBraceletRotationRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,26 +152,39 @@ const VirtualTryOn = () => {
         const catalogData = await getCatalog();
         const sameCategoryJewelries = catalogData.filter(j => j.category_id === jewelryData.category_id);
         setAllCategoryJewelries(sameCategoryJewelries);
-        
-        // Establecer variante por defecto
-        if (jewelryData.variants && jewelryData.variants.length > 0) {
-          setSelectedVariant(jewelryData.variants[0]);
-          
-          // Aplicar configuración del modelo 3D desde la BD
-          const variant = jewelryData.variants[0];
-          if (variant.models3d && variant.models3d.length > 0) {
-            const model3d = variant.models3d[0];
-            setModelScale({
-              x: model3d.scale_factor || 1,
-              y: model3d.scale_factor || 1,
-              z: model3d.scale_factor || 1
-            });
-            setModelRotation({
-              x: model3d.rotation_x || 0,
-              y: model3d.rotation_y || 0,
-              z: model3d.rotation_z || 0
-            });
+
+        // Precargar GLB de todas las joyas de la misma categoría para cambio rápido
+        const API_URL = 'http://localhost:3000';
+        const preloadPromises = [];
+        sameCategoryJewelries.forEach(jewelry => {
+          if (jewelry.models3d && jewelry.models3d.length > 0) {
+            const modelUrl = jewelry.models3d[0].file_url;
+            const fullUrl = modelUrl?.startsWith('http') ? modelUrl : `${API_URL}${modelUrl}`;
+            const promise = fetch(fullUrl)
+              .then(response => {
+                if (response.ok) {
+                  return response.blob();
+                }
+              })
+              .catch(() => {});
+            preloadPromises.push(promise);
           }
+        });
+        console.log('Precargando', preloadPromises.length, 'modelos GLB...');
+
+        // Aplicar configuración del modelo 3D desde la BD
+        if (jewelryData.models3d && jewelryData.models3d.length > 0) {
+          const model3d = jewelryData.models3d[0];
+          setModelScale({
+            x: model3d.scale_factor || 1,
+            y: model3d.scale_factor || 1,
+            z: model3d.scale_factor || 1
+          });
+          setModelRotation({
+            x: model3d.rotation_x || 0,
+            y: model3d.rotation_y || 0,
+            z: model3d.rotation_z || 0
+          });
         }
         
       } catch (err) {
@@ -171,6 +221,17 @@ const VirtualTryOn = () => {
           trackingInstance = new FaceTracking();
           await trackingInstance.initialize();
           console.log('✅ MediaPipe Face Mesh inicializado');
+
+          // También iniciar Pose para obtener landmarks de oreja (7 y 8)
+          console.log('Iniciando Pose adicional para landmarks de oreja');
+          poseTrackingRef.current = new PoseTracking();
+          await poseTrackingRef.current.initialize();
+          console.log('✅ Pose adicional inicializado');
+
+          // Configurar callback de Pose para guardar resultados
+          poseTrackingRef.current.setOnResults((poseResults) => {
+            poseResultsRef.current = poseResults;
+          });
         } else if (trackingType === 'hand') {
           console.log('Usando MediaPipe Hands (detecta manos para pulseras)');
           setTrackingStatus('⏳ Cargando MediaPipe Hands...');
@@ -190,7 +251,7 @@ const VirtualTryOn = () => {
           if (trackingType === 'face' && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
             trackingStatusRef.current = '✅ Cara detectada - ' + results.multiFaceLandmarks[0].length + ' puntos clave';
           } else if (trackingType === 'hand' && results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            trackingStatusRef.current = '✅ Mano detectada - ' + results.multiHandLandmarks[0].length + ' puntos clave';
+            trackingStatusRef.current = '✅ Mano detectada';
           } else if (trackingType === 'pose' && results.poseLandmarks && results.poseLandmarks.length > 0) {
             trackingStatusRef.current = '✅ Cuerpo detectado - ' + results.poseLandmarks.length + ' puntos clave';
           } else {
@@ -218,6 +279,10 @@ const VirtualTryOn = () => {
             isProcessing = true;
             try {
               await trackingInstance.processFrame(videoRef.current);
+              // En modo aretes, también procesar Pose para obtener landmarks de oreja
+              if (trackingType === 'face' && poseTrackingRef.current) {
+                await poseTrackingRef.current.processFrame(videoRef.current);
+              }
             } catch (error) {
               console.error('Error procesando frame:', error);
               // Si MediaPipe falla, marcar como fallado y detener el bucle
@@ -322,7 +387,7 @@ const VirtualTryOn = () => {
 
         // Escalar según ancho de hombros
         const shoulderWidth = yoloTracking.getShoulderWidth(landmarks);
-        const baseScale = selectedVariant?.models3d?.[0]?.scale_factor || 1;
+        const baseScale = jewelry?.models3d?.[0]?.scale_factor || 1;
         scale = {
           x: shoulderWidth * baseScale * 1.2,
           y: shoulderWidth * baseScale * 1.2,
@@ -351,32 +416,106 @@ const VirtualTryOn = () => {
       // Resultados de MediaPipe (fallback)
       if (type === 'face' && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
+        // Espejar landmarks para coincidir con el video espejado (scaleX(-1))
+        const mirroredLandmarks = landmarks.map((landmark) => ({
+          ...landmark,
+          x: 1 - landmark.x
+        }));
         const faceTracking = new FaceTracking();
-        
-        setDebugLandmarks(landmarks);
-        
-        const earPositions = faceTracking.getEarPositions(landmarks);
+
+        setDebugLandmarks(mirroredLandmarks);
+
+        // Intentar usar landmarks de Pose (7 y 8) para orejas
+        let usePoseEars = false;
+        let poseEarPositions = null;
+        if (poseResultsRef.current && poseResultsRef.current.poseLandmarks) {
+          const poseLandmarks = poseResultsRef.current.poseLandmarks;
+          const leftEar = poseLandmarks[7]; // Oreja izquierda
+          const rightEar = poseLandmarks[8]; // Oreja derecha
+
+          // Verificar visibilidad
+          if (leftEar && rightEar && (leftEar.visibility || 0) > 0.5 && (rightEar.visibility || 0) > 0.5) {
+            // Espejar landmarks de Pose
+            poseEarPositions = {
+              left: { x: 1 - leftEar.x, y: leftEar.y, z: leftEar.z },
+              right: { x: 1 - rightEar.x, y: rightEar.y, z: rightEar.z }
+            };
+            usePoseEars = true;
+          }
+        }
+
+        let earlobePositions;
+        if (usePoseEars && poseEarPositions) {
+          // Usar Pose landmarks: bajar ~10% del alto de cara hacia el lóbulo
+          const faceTop = landmarks[10];
+          const chin = landmarks[152];
+          const faceHeight = Math.hypot(chin.x - faceTop.x, chin.y - faceTop.y);
+          const lobeDropPercent = debugConfig.earringLobeDropPercent ?? 0.10;
+          const lateralOffset = faceHeight * (debugConfig.lateralOffsetPercent || 0.10);
+
+          earlobePositions = {
+            left: {
+              x: poseEarPositions.left.x - lateralOffset,
+              y: poseEarPositions.left.y + faceHeight * lobeDropPercent,
+              z: poseEarPositions.left.z
+            },
+            right: {
+              x: poseEarPositions.right.x + lateralOffset,
+              y: poseEarPositions.right.y + faceHeight * lobeDropPercent,
+              z: poseEarPositions.right.z
+            },
+            faceHeight
+          };
+        } else {
+          // Respaldo: usar estimación facial actual
+          earlobePositions = faceTracking.getEarlobePositions(mirroredLandmarks, debugConfig);
+        }
+
+        const earPositions = faceTracking.getEarPositions(mirroredLandmarks);
         if (earPositions) {
-          position = {
-            x: earPositions.left.x,
-            y: earPositions.left.y,
-            z: earPositions.left.z
+          earPositionsRef.current = earPositions;
+        }
+        if (earlobePositions) {
+          earlobePositionsRef.current = earlobePositions;
+
+          // Suavizar posiciones con filtro exponencial (alpha = 0.3)
+          const alpha = 0.3;
+          if (smoothedLobePositionsRef.current.left) {
+            smoothedLobePositionsRef.current.left = {
+              x: smoothedLobePositionsRef.current.left.x + alpha * (earlobePositions.left.x - smoothedLobePositionsRef.current.left.x),
+              y: smoothedLobePositionsRef.current.left.y + alpha * (earlobePositions.left.y - smoothedLobePositionsRef.current.left.y),
+              z: smoothedLobePositionsRef.current.left.z + alpha * (earlobePositions.left.z - smoothedLobePositionsRef.current.left.z)
+            };
+            smoothedLobePositionsRef.current.right = {
+              x: smoothedLobePositionsRef.current.right.x + alpha * (earlobePositions.right.x - smoothedLobePositionsRef.current.right.x),
+              y: smoothedLobePositionsRef.current.right.y + alpha * (earlobePositions.right.y - smoothedLobePositionsRef.current.right.y),
+              z: smoothedLobePositionsRef.current.right.z + alpha * (earlobePositions.right.z - smoothedLobePositionsRef.current.right.z)
+            };
+            smoothedLobePositionsRef.current.faceWidth = smoothedLobePositionsRef.current.faceWidth + alpha * (earlobePositions.faceWidth - smoothedLobePositionsRef.current.faceWidth);
+          } else {
+            smoothedLobePositionsRef.current = { ...earlobePositions };
+          }
+
+          // Calcular escala basada en alto de la cara (20-25%)
+          const faceHeight = earlobePositions.faceHeight || 0.3;
+          const baseScale = jewelry?.models3d?.[0]?.scale_factor || 1;
+          const targetScale = faceHeight * (debugConfig.earringSizePercent || 0.225) * baseScale;
+
+          // Suavizar escala
+          if (smoothedScaleRef.current > 0) {
+            smoothedScaleRef.current = smoothedScaleRef.current + alpha * (targetScale - smoothedScaleRef.current);
+          } else {
+            smoothedScaleRef.current = targetScale;
+          }
+
+          scale = {
+            x: smoothedScaleRef.current,
+            y: smoothedScaleRef.current,
+            z: smoothedScaleRef.current
           };
         }
 
-        rotation = faceTracking.getFaceRotation(landmarks);
-        
-        // Escalar aretes basado en distancia entre orejas
-        const earDistance = Math.sqrt(
-          Math.pow(earPositions.right.x - earPositions.left.x, 2) +
-          Math.pow(earPositions.right.y - earPositions.left.y, 2)
-        );
-        const baseScale = selectedVariant?.models3d?.[0]?.scale_factor || 1;
-        scale = {
-          x: earDistance * baseScale * 2.0,
-          y: earDistance * baseScale * 2.0,
-          z: earDistance * baseScale * 2.0
-        };
+        rotation = faceTracking.getEarringRotation(mirroredLandmarks);
 
       } else if (type === 'pose' && results.poseLandmarks && results.poseLandmarks.length > 0) {
         const mirroredLandmarks = results.poseLandmarks.map((landmark) => ({
@@ -387,82 +526,188 @@ const VirtualTryOn = () => {
         debugLandmarksRef.current = mirroredLandmarks;
 
         const poseTracking = new PoseTracking();
-        const necklaceFit = poseTracking.getNecklaceFit(mirroredLandmarks);
+        const necklaceFit = poseTracking.getNecklaceFit(mirroredLandmarks, debugConfig);
         if (necklaceFit) {
           position = necklaceFit.position;
           rotation = necklaceFit.rotation;
-          const baseScale = selectedVariant?.models3d?.[0]?.scale_factor || 1;
+          anchorPointsRef.current = necklaceFit.anchorPoints || { left: null, right: null };
+
+          const baseScale = jewelry?.models3d?.[0]?.scale_factor || 1;
           const overlayScale = Math.min(0.28, Math.max(0.11, necklaceFit.span * 0.55 * baseScale));
           scale = {
             x: overlayScale,
-            y: overlayScale,
+            y: overlayScale * debugConfig.scaleY,
             z: overlayScale
           };
+
+          // Aplicar offsets de debug
+          position.x += debugConfig.offsetX;
+          position.y += debugConfig.offsetY;
         }
 
       } else if (type === 'face' && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
         const landmarks = results.multiFaceLandmarks[0];
+        // Espejar landmarks para coincidir con el video espejado (scaleX(-1))
         const mirroredLandmarks = landmarks.map((landmark) => ({
           ...landmark,
           x: 1 - landmark.x
         }));
-
         debugLandmarksRef.current = mirroredLandmarks;
 
         const faceTracking = new FaceTracking();
+
+        // Intentar usar landmarks de Pose (7 y 8) para orejas
+        let usePoseEars = false;
+        let poseEarPositions = null;
+        if (poseResultsRef.current && poseResultsRef.current.poseLandmarks) {
+          const poseLandmarks = poseResultsRef.current.poseLandmarks;
+          const leftEar = poseLandmarks[7]; // Oreja izquierda
+          const rightEar = poseLandmarks[8]; // Oreja derecha
+
+          // Verificar visibilidad
+          if (leftEar && rightEar && (leftEar.visibility || 0) > 0.5 && (rightEar.visibility || 0) > 0.5) {
+            // Espejar landmarks de Pose
+            poseEarPositions = {
+              left: { x: 1 - leftEar.x, y: leftEar.y, z: leftEar.z },
+              right: { x: 1 - rightEar.x, y: rightEar.y, z: rightEar.z }
+            };
+            usePoseEars = true;
+          }
+        }
+
+        let earlobePositions;
+        if (usePoseEars && poseEarPositions) {
+          // Usar Pose landmarks: bajar ~10% del alto de cara hacia el lóbulo
+          const faceTop = landmarks[10];
+          const chin = landmarks[152];
+          const faceHeight = Math.hypot(chin.x - faceTop.x, chin.y - faceTop.y);
+          const lobeDropPercent = debugConfig.earringLobeDropPercent ?? 0.10;
+          const lateralOffset = faceHeight * (debugConfig.lateralOffsetPercent || 0.10);
+
+          earlobePositions = {
+            left: {
+              x: poseEarPositions.left.x - lateralOffset,
+              y: poseEarPositions.left.y + faceHeight * lobeDropPercent,
+              z: poseEarPositions.left.z
+            },
+            right: {
+              x: poseEarPositions.right.x + lateralOffset,
+              y: poseEarPositions.right.y + faceHeight * lobeDropPercent,
+              z: poseEarPositions.right.z
+            },
+            faceHeight
+          };
+        } else {
+          // Respaldo: usar estimación facial actual
+          earlobePositions = faceTracking.getEarlobePositions(mirroredLandmarks, debugConfig);
+        }
+
         const earPositions = faceTracking.getEarPositions(mirroredLandmarks);
         if (earPositions) {
-          position = {
-            x: earPositions.left.x,
-            y: earPositions.left.y,
-            z: earPositions.left.z
+          earPositionsRef.current = earPositions;
+        }
+        if (earlobePositions) {
+          earlobePositionsRef.current = earlobePositions;
+
+          // Suavizar posiciones con filtro exponencial (alpha = 0.3)
+          const alpha = 0.3;
+          if (smoothedLobePositionsRef.current.left) {
+            smoothedLobePositionsRef.current.left = {
+              x: smoothedLobePositionsRef.current.left.x + alpha * (earlobePositions.left.x - smoothedLobePositionsRef.current.left.x),
+              y: smoothedLobePositionsRef.current.left.y + alpha * (earlobePositions.left.y - smoothedLobePositionsRef.current.left.y),
+              z: smoothedLobePositionsRef.current.left.z + alpha * (earlobePositions.left.z - smoothedLobePositionsRef.current.left.z)
+            };
+            smoothedLobePositionsRef.current.right = {
+              x: smoothedLobePositionsRef.current.right.x + alpha * (earlobePositions.right.x - smoothedLobePositionsRef.current.right.x),
+              y: smoothedLobePositionsRef.current.right.y + alpha * (earlobePositions.right.y - smoothedLobePositionsRef.current.right.y),
+              z: smoothedLobePositionsRef.current.right.z + alpha * (earlobePositions.right.z - smoothedLobePositionsRef.current.right.z)
+            };
+            smoothedLobePositionsRef.current.faceWidth = smoothedLobePositionsRef.current.faceWidth + alpha * (earlobePositions.faceWidth - smoothedLobePositionsRef.current.faceWidth);
+          } else {
+            smoothedLobePositionsRef.current = { ...earlobePositions };
+          }
+
+          // Calcular escala basada en alto de la cara (20-25%)
+          const faceHeight = earlobePositions.faceHeight || 0.3;
+          const baseScale = jewelry?.models3d?.[0]?.scale_factor || 1;
+          const targetScale = faceHeight * (debugConfig.earringSizePercent || 0.225) * baseScale;
+
+          // Suavizar escala
+          if (smoothedScaleRef.current > 0) {
+            smoothedScaleRef.current = smoothedScaleRef.current + alpha * (targetScale - smoothedScaleRef.current);
+          } else {
+            smoothedScaleRef.current = targetScale;
+          }
+
+          scale = {
+            x: smoothedScaleRef.current,
+            y: smoothedScaleRef.current,
+            z: smoothedScaleRef.current
           };
         }
 
-        rotation = faceTracking.getFaceRotation(mirroredLandmarks);
-
-        // Escalar aretes basado en distancia entre orejas
-        const earDistance = Math.sqrt(
-          Math.pow(earPositions.right.x - earPositions.left.x, 2) +
-          Math.pow(earPositions.right.y - earPositions.left.y, 2)
-        );
-        const baseScale = selectedVariant?.models3d?.[0]?.scale_factor || 1;
-        scale = {
-          x: earDistance * baseScale * 2.0,
-          y: earDistance * baseScale * 2.0,
-          z: earDistance * baseScale * 2.0
-        };
+        rotation = faceTracking.getEarringRotation(mirroredLandmarks);
 
       } else if (type === 'hand' && results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
+        // Espejar landmarks para coincidir con el video espejado (scaleX(-1))
+        const mirroredLandmarks = landmarks.map((landmark) => ({
+          ...landmark,
+          x: 1 - landmark.x
+        }));
         const handTracking = new HandTracking();
-        
-        setDebugLandmarks(landmarks);
-        
-        const wristPosition = handTracking.getWristPosition(landmarks);
-        if (wristPosition) {
-          position = {
-            x: wristPosition.x,
-            y: wristPosition.y,
-            z: wristPosition.z
+
+        setDebugLandmarks(mirroredLandmarks);
+
+        // Calcular posición, tamaño y rotación de la pulsera
+        const braceletPosition = handTracking.getBraceletPosition(mirroredLandmarks, 0.2);
+        const braceletScale = handTracking.getBraceletScale(mirroredLandmarks, jewelry?.models3d?.[0]?.scale_factor || 1);
+        const braceletRotation = handTracking.getBraceletRotation(mirroredLandmarks, 70); // 70° para aspecto de banda
+
+        if (braceletPosition) {
+          // Suavizar posición con filtro exponencial (alpha = 0.3)
+          const alpha = 0.3;
+          if (smoothedBraceletPositionRef.current) {
+            smoothedBraceletPositionRef.current = {
+              x: smoothedBraceletPositionRef.current.x + alpha * (braceletPosition.x - smoothedBraceletPositionRef.current.x),
+              y: smoothedBraceletPositionRef.current.y + alpha * (braceletPosition.y - smoothedBraceletPositionRef.current.y),
+              z: smoothedBraceletPositionRef.current.z + alpha * (braceletPosition.z - smoothedBraceletPositionRef.current.z)
+            };
+          } else {
+            smoothedBraceletPositionRef.current = { ...braceletPosition };
+          }
+          position = smoothedBraceletPositionRef.current;
+        }
+
+        // Suavizar escala
+        if (braceletScale) {
+          const alpha = 0.3;
+          if (smoothedBraceletScaleRef.current) {
+            smoothedBraceletScaleRef.current = smoothedBraceletScaleRef.current + alpha * (braceletScale - smoothedBraceletScaleRef.current);
+          } else {
+            smoothedBraceletScaleRef.current = braceletScale;
+          }
+          scale = {
+            x: smoothedBraceletScaleRef.current,
+            y: smoothedBraceletScaleRef.current,
+            z: smoothedBraceletScaleRef.current
           };
         }
 
-        rotation = handTracking.getHandRotation(landmarks);
-        
-        // Escalar pulseras basado en tamaño de la mano
-        const wrist = landmarks[0];
-        const middleFinger = landmarks[12];
-        const handSize = Math.sqrt(
-          Math.pow(middleFinger.x - wrist.x, 2) +
-          Math.pow(middleFinger.y - wrist.y, 2)
-        );
-        const baseScale = selectedVariant?.models3d?.[0]?.scale_factor || 1;
-        scale = {
-          x: handSize * baseScale * 3.0,
-          y: handSize * baseScale * 3.0,
-          z: handSize * baseScale * 3.0
-        };
+        // Suavizar rotación
+        if (braceletRotation) {
+          const alpha = 0.3;
+          if (smoothedBraceletRotationRef.current) {
+            smoothedBraceletRotationRef.current = {
+              x: smoothedBraceletRotationRef.current.x + alpha * (braceletRotation.x - smoothedBraceletRotationRef.current.x),
+              y: smoothedBraceletRotationRef.current.y + alpha * (braceletRotation.y - smoothedBraceletRotationRef.current.y),
+              z: smoothedBraceletRotationRef.current.z + alpha * (braceletRotation.z - smoothedBraceletRotationRef.current.z)
+            };
+          } else {
+            smoothedBraceletRotationRef.current = { ...braceletRotation };
+          }
+          rotation = smoothedBraceletRotationRef.current;
+        }
       }
     }
 
@@ -475,12 +720,36 @@ const VirtualTryOn = () => {
     // El componente JewelryRendererModelViewer leerá de los refs
   };
 
-  const handleVariantChange = (variant) => {
-    setSelectedVariant(variant);
-  };
+  const handleJewelryChange = async (newJewelryId) => {
+    // Si ya estamos en esa página, no hacer nada
+    if (window.location.pathname === `/probador/${newJewelryId}`) {
+      return;
+    }
 
-  const handleJewelryChange = (newJewelryId) => {
-    navigate(`/probador/${newJewelryId}`);
+    try {
+      // Cargar datos completos de la joya
+      const jewelryData = await getJewelryById(newJewelryId);
+      setJewelry(jewelryData);
+      // Actualizar URL sin recargar
+      window.history.pushState({}, '', `/probador/${newJewelryId}`);
+
+      // Aplicar configuración del modelo 3D desde la BD
+      if (jewelryData.models3d && jewelryData.models3d.length > 0) {
+        const model3d = jewelryData.models3d[0];
+        setModelScale({
+          x: model3d.scale_factor || 1,
+          y: model3d.scale_factor || 1,
+          z: model3d.scale_factor || 1
+        });
+        setModelRotation({
+          x: model3d.rotation_x || 0,
+          y: model3d.rotation_y || 0,
+          z: model3d.rotation_z || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error cargando joya:', error);
+    }
   };
 
   if (loading) {
@@ -509,7 +778,7 @@ const VirtualTryOn = () => {
     );
   }
 
-  const modelUrl = selectedVariant?.models3d?.[0]?.file_url || jewelry?.variants?.[0]?.models3d?.[0]?.file_url;
+  const modelUrl = jewelry?.models3d?.[0]?.file_url;
   const API_URL = 'http://localhost:3000';
   const fullModelUrl = modelUrl?.startsWith('http') ? modelUrl : `${API_URL}${modelUrl}`;
 
@@ -524,9 +793,9 @@ const VirtualTryOn = () => {
             <p>{category?.name} - {jewelry?.name}</p>
           </div>
         </div>
-        <Link to="/catalogo" className="back-button">
+        <button onClick={() => window.location.href = '/catalogo'} className="back-button">
           Volver al catálogo
-        </Link>
+        </button>
       </div>
 
       {/* Área principal de cámara y renderizado */}
@@ -564,12 +833,19 @@ const VirtualTryOn = () => {
               zIndex: 4
             }}>
               <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-                {/* Dibujar TODOS los 33 puntos de MediaPipe Pose */}
+                {/* Dibujar puntos de landmarks */}
                 {debugLandmarks && debugLandmarks.map((landmark, index) => {
-                  const visibility = landmark.visibility || 0;
-                  const color = visibility > 0.5 ? '#00ff00' : visibility > 0.3 ? '#ffff00' : '#ff0000';
-                  const radius = index < 11 ? 8 : 5; // Puntos de cara/hombros más grandes
-                  
+                  // FaceMesh no tiene visibility, usar color verde por defecto en modo cara
+                  // Hands tampoco tiene visibility, usar verde cuando hay detección
+                  const color = trackingType === 'face' || trackingType === 'hand'
+                    ? '#00ff00'
+                    : (() => {
+                        const visibility = landmark.visibility || 0;
+                        return visibility > 0.5 ? '#00ff00' : visibility > 0.3 ? '#ffff00' : '#ff0000';
+                      })();
+                  const radius = trackingType === 'face' ? 3 : (trackingType === 'hand' ? 6 : (index < 11 ? 8 : 5));
+                  const opacity = trackingType === 'face' ? 0.7 : (trackingType === 'hand' ? 0.7 : Math.max(0.3, landmark.visibility || 0));
+
                   return (
                     <circle
                       key={index}
@@ -577,7 +853,7 @@ const VirtualTryOn = () => {
                       cy={landmark.y * 100 + '%'}
                       r={radius}
                       fill={color}
-                      opacity={Math.max(0.3, visibility)}
+                      opacity={opacity}
                     />
                   );
                 })}
@@ -592,6 +868,87 @@ const VirtualTryOn = () => {
                     stroke="white"
                     strokeWidth="3"
                   />
+                )}
+
+                {/* Punto rojo en el ancla de la pulsera */}
+                {trackingType === 'hand' && smoothedBraceletPositionRef.current && (
+                  <circle
+                    cx={smoothedBraceletPositionRef.current.x * 100 + '%'}
+                    cy={smoothedBraceletPositionRef.current.y * 100 + '%'}
+                    r="12"
+                    fill="red"
+                    opacity="0.9"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                )}
+
+                {/* Puntos de anclaje y línea de corte del collar (solo en modo debug) */}
+                {isDebugMode && trackingType === 'pose' && anchorPointsRef.current && anchorPointsRef.current.left && anchorPointsRef.current.right && (
+                  <>
+                    {/* Línea de corte roja */}
+                    {(() => {
+                      const parent = document.querySelector('.camera-wrapper');
+                      if (!parent) return null;
+                      const parentHeight = parent.clientHeight || 480;
+                      const midY = (anchorPointsRef.current.left.y + anchorPointsRef.current.right.y) / 2;
+                      const cutOffsetPx = debugConfig.cutOffset || 0;
+                      const cutY = midY - (cutOffsetPx / parentHeight);
+                      return (
+                        <line
+                          x1="0%"
+                          y1={`${cutY * 100}%`}
+                          x2="100%"
+                          y2={`${cutY * 100}%`}
+                          stroke="red"
+                          strokeWidth="2"
+                          strokeDasharray="5,5"
+                        />
+                      );
+                    })()}
+                    <circle
+                      cx={anchorPointsRef.current.left.x * 100 + '%'}
+                      cy={anchorPointsRef.current.left.y * 100 + '%'}
+                      r="12"
+                      fill="red"
+                      opacity="0.9"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx={anchorPointsRef.current.right.x * 100 + '%'}
+                      cy={anchorPointsRef.current.right.y * 100 + '%'}
+                      r="12"
+                      fill="red"
+                      opacity="0.9"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </>
+                )}
+
+                {/* Puntos de anclaje de aretes (solo en modo debug) */}
+                {isDebugMode && trackingType === 'face' && smoothedLobePositionsRef.current && smoothedLobePositionsRef.current.left && smoothedLobePositionsRef.current.right && (
+                  <>
+                    <circle
+                      cx={smoothedLobePositionsRef.current.left.x * 100 + '%'}
+                      cy={smoothedLobePositionsRef.current.left.y * 100 + '%'}
+                      r="12"
+                      fill="red"
+                      opacity="0.9"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx={smoothedLobePositionsRef.current.right.x * 100 + '%'}
+                      cy={smoothedLobePositionsRef.current.right.y * 100 + '%'}
+                      r="12"
+                      fill="red"
+                      opacity="0.9"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </>
                 )}
               </svg>
               
@@ -609,24 +966,35 @@ const VirtualTryOn = () => {
                 maxWidth: '200px'
               }}>
                 <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#D4AF37' }}>
-                  Puntos detectados (33 total)
+                  {trackingType === 'face' ? 'Puntos detectados (478 total)' : 'Puntos detectados (33 total)'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <div style={{ width: '10px', height: '10px', background: '#00ff00', borderRadius: '50%' }}></div>
-                  <span>Visible (alta confianza)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <div style={{ width: '10px', height: '10px', background: '#ffff00', borderRadius: '50%' }}></div>
-                  <span>Parcialmente visible</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <div style={{ width: '10px', height: '10px', background: '#ff0000', borderRadius: '50%' }}></div>
-                  <span>No visible / baja confianza</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '15px', height: '15px', background: 'yellow', borderRadius: '50%', border: '2px solid white' }}></div>
-                  <span>Cuello detectado</span>
-                </div>
+                {trackingType === 'face' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <div style={{ width: '10px', height: '10px', background: '#00ff00', borderRadius: '50%' }}></div>
+                    <span>Cara detectada</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div style={{ width: '10px', height: '10px', background: '#00ff00', borderRadius: '50%' }}></div>
+                      <span>Visible (alta confianza)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div style={{ width: '10px', height: '10px', background: '#ffff00', borderRadius: '50%' }}></div>
+                      <span>Parcialmente visible</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <div style={{ width: '10px', height: '10px', background: '#ff0000', borderRadius: '50%' }}></div>
+                      <span>No visible / baja confianza</span>
+                    </div>
+                  </>
+                )}
+                {trackingType === 'pose' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '15px', height: '15px', background: 'yellow', borderRadius: '50%', border: '2px solid white' }}></div>
+                    <span>Cuello detectado</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -637,8 +1005,226 @@ const VirtualTryOn = () => {
               positionRef={modelPositionRef}
               rotationRef={modelRotationRef}
               scaleRef={modelScaleRef}
+              anchorPointsRef={anchorPointsRef}
+              earPositionsRef={earPositionsRef}
+              earlobePositionsRef={smoothedLobePositionsRef}
+              trackingType={trackingType}
+              neckPositionRef={modelPositionRef}
+              debugConfig={isDebugMode ? debugConfig : null}
               onModelLoaded={() => console.log('Modelo cargado')}
             />
+          )}
+
+          {/* Panel de debug (solo con ?debug=1) */}
+          {isDebugMode && trackingType === 'face' && (
+            <div style={{
+              position: 'absolute',
+              top: '60px',
+              right: '10px',
+              background: 'rgba(0, 0, 0, 0.9)',
+              color: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              zIndex: 100,
+              maxWidth: '280px',
+              border: '1px solid #D4AF37'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#D4AF37' }}>
+                Calibración de Aretes
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Altura (nariz-labio): {(debugConfig.noseLipHeightPercent * 100).toFixed(1)}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={debugConfig.noseLipHeightPercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, noseLipHeightPercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Separación lateral: {(debugConfig.lateralOffsetPercent * 100).toFixed(1)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.20"
+                  step="0.005"
+                  value={debugConfig.lateralOffsetPercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, lateralOffsetPercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Bajada al lóbulo: {(debugConfig.earringLobeDropPercent * 100).toFixed(1)}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.25"
+                  step="0.01"
+                  value={debugConfig.earringLobeDropPercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, earringLobeDropPercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Tamaño (% alto cara): {(debugConfig.earringSizePercent * 100).toFixed(1)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.15"
+                  max="0.35"
+                  step="0.01"
+                  value={debugConfig.earringSizePercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, earringSizePercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Offset X: {debugConfig.earringOffsetX.toFixed(3)}
+                </label>
+                <input
+                  type="range"
+                  min="-0.1"
+                  max="0.1"
+                  step="0.005"
+                  value={debugConfig.earringOffsetX}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, earringOffsetX: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Offset Y: {debugConfig.earringOffsetY.toFixed(3)}
+                </label>
+                <input
+                  type="range"
+                  min="-0.1"
+                  max="0.1"
+                  step="0.005"
+                  value={debugConfig.earringOffsetY}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, earringOffsetY: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {isDebugMode && trackingType === 'pose' && (
+            <div style={{
+              position: 'absolute',
+              top: '60px',
+              right: '10px',
+              background: 'rgba(0, 0, 0, 0.9)',
+              color: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              zIndex: 100,
+              maxWidth: '280px',
+              border: '1px solid #D4AF37'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#D4AF37' }}>
+                Calibración de Collar
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Altura anclaje: {(debugConfig.anchorHeightPercent * 100).toFixed(0)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="0.8"
+                  step="0.01"
+                  value={debugConfig.anchorHeightPercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, anchorHeightPercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Separación lateral: {(debugConfig.anchorLateralPercent * 100).toFixed(0)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.2"
+                  max="0.4"
+                  step="0.01"
+                  value={debugConfig.anchorLateralPercent}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, anchorLateralPercent: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Escala vertical: {debugConfig.scaleY.toFixed(2)}
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={debugConfig.scaleY}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, scaleY: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Offset X: {debugConfig.offsetX.toFixed(3)}
+                </label>
+                <input
+                  type="range"
+                  min="-0.1"
+                  max="0.1"
+                  step="0.005"
+                  value={debugConfig.offsetX}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, offsetX: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Offset Y: {debugConfig.offsetY.toFixed(3)}
+                </label>
+                <input
+                  type="range"
+                  min="-0.1"
+                  max="0.1"
+                  step="0.005"
+                  value={debugConfig.offsetY}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, offsetY: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                  Altura corte: {debugConfig.cutOffset.toFixed(0)} px
+                </label>
+                <input
+                  type="range"
+                  min="-20"
+                  max="20"
+                  step="1"
+                  value={debugConfig.cutOffset}
+                  onChange={(e) => setDebugConfig({ ...debugConfig, cutOffset: parseFloat(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ marginTop: '10px', fontSize: '10px', color: '#ccc' }}>
+                Config: {JSON.stringify(debugConfig)}
+              </div>
+            </div>
           )}
 
           {/* NeckOccluder desactivado - los landmarks de Pose no siguen bien la cara */}
@@ -652,27 +1238,8 @@ const VirtualTryOn = () => {
         </div>
       </div>
 
-      {/* Panel inferior: selector de variantes y joyas */}
+      {/* Panel inferior: selector de joyas */}
       <div className="tryon-panel">
-        {/* Selector de variantes */}
-        {jewelry?.variants && jewelry.variants.length > 0 && (
-          <div className="variant-selector">
-            <h3>Variantes de color</h3>
-            <div className="variant-buttons">
-              {jewelry.variants.map((variant) => (
-                <button
-                  key={variant.id}
-                  className={`variant-button ${selectedVariant?.id === variant.id ? 'active' : ''}`}
-                  onClick={() => handleVariantChange(variant)}
-                  style={{ backgroundColor: variant.hex_code || variant.color }}
-                >
-                  {variant.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Joyas de la misma categoría (todas sin duplicados) */}
         <div className="jewelries-section">
           <h3>{category?.name}</h3>
@@ -685,7 +1252,11 @@ const VirtualTryOn = () => {
                 onClick={() => item.id !== jewelry.id && handleJewelryChange(item.id)}
               >
                 <div className="mini-jewelry-image">
-                  {item.name}
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} />
+                  ) : (
+                    <span>{item.name}</span>
+                  )}
                 </div>
                 <p className="mini-jewelry-name">{item.name}</p>
                 {item.id === jewelry.id && <div className="selected-badge">Seleccionado</div>}

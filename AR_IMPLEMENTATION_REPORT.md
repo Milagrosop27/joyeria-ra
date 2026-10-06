@@ -26,11 +26,12 @@
    - Carga configuración de modelo desde BD (scale_factor, rotaciones)
    - Conecta tracking con renderizado
    - Determina tipo de tracking según categoría
+   - Muestra imágenes de joyas en el selector inferior (image_url desde BD)
 
 2. **frontend/src/modules/virtual-try-on/JewelryRendererModelViewer.jsx**
    - Agregó soporte para rotación dinámica del modelo
    - Agregó soporte para escala dinámica del modelo
-   - Desactivó auto-rotate y controles de cámara para体验 AR
+   - Desactivó auto-rotate y controles de cámara para experiencia AR
    - Aplica transiciones suaves de posición, rotación y escala
 
 3. **frontend/src/modules/virtual-try-on/PoseTracking.js**
@@ -39,11 +40,14 @@
    - Calcula posición intermedia (40% desde hombros hacia ojos)
    - Agregó logs de depuración
 
+4. **frontend/src/assets/styles/VirtualTryOn.css**
+   - Agregó estilos para mostrar imágenes en tarjetas de joyas
+   - Configuración de object-fit para imágenes
+
 ### Archivos Existentes (sin modificar pero utilizados)
 - **frontend/src/modules/virtual-try-on/CameraView.jsx** - Acceso a cámara
 - **frontend/src/modules/virtual-try-on/FaceTracking.js** - Detección facial
 - **frontend/src/modules/virtual-try-on/HandTracking.js** - Detección de manos
-- **frontend/src/assets/styles/VirtualTryOn.css** - Estilos
 
 ---
 
@@ -56,27 +60,26 @@
    {
      "id": 1,
      "name": "Collar de oro",
-     "variants": [
+     "category_id": 1,
+     "price": 150.00,
+     "short_description": "Collar elegante de oro",
+     "image_url": "data:image/jpeg;base64,...",
+     "is_active": 1,
+     "models3d": [
        {
          "id": 1,
-         "name": "Plata",
-         "hex_code": "#C0C0C0",
-         "models3d": [
-           {
-             "id": 1,
-             "file_url": "/models/collar-plata.glb",
-             "file_size_kb": 1250,
-             "scale_factor": 1.2,
-             "rotation_x": 0,
-             "rotation_y": 0,
-             "rotation_z": 0
-           }
-         ]
+         "jewelry_id": 1,
+         "file_url": "/models/collar-oro.glb",
+         "file_size_kb": 1250,
+         "scale_factor": 1.2,
+         "rotation_x": 0,
+         "rotation_y": 0,
+         "rotation_z": 0
        }
      ]
    }
    ```
-4. El frontend construye la URL completa: `http://localhost:3000/models/collar-plata.glb`
+4. El frontend construye la URL completa: `http://localhost:3000/models/collar-oro.glb`
 5. El model-viewer carga el GLB desde esa URL
 
 ---
@@ -176,14 +179,20 @@ container.style.height = `${baseSize * scaleFactor}px`;
 
 ### Pasos
 
-**Opción 1: Local Development**
+**Opción 1: Local Development (Backend y Frontend separados)**
 1. Ejecutar backend: `cd backend && npm start` (http://localhost:3000)
 2. Ejecutar frontend: `cd frontend && npm run dev` (http://localhost:5174)
 3. Desde el celular, acceder a: `http://[TU_IP]:5174`
    - Para obtener tu IP: `ipconfig` (Windows) o `ifconfig` (Mac/Linux)
 4. Abrir una joya y hacer clic en "Probar virtualmente"
 
-**Opción 2: Deploy en servidor**
+**Opción 2: Local Development (Backend y Frontend juntos)**
+1. Instalar dependencias: `npm run install-all` (desde la raíz)
+2. Ejecutar ambos: `npm run dev` (desde la raíz)
+3. Desde el celular, acceder a: `http://[TU_IP]:5174`
+4. Abrir una joya y hacer clic en "Probar virtualmente"
+
+**Opción 3: Deploy en servidor**
 1. Deploy del backend (Vercel, Railway, etc.)
 2. Deploy del frontend (Vercel, Netlify, etc.)
 3. Desde el celular, acceder a la URL pública
@@ -201,22 +210,24 @@ container.style.height = `${baseSize * scaleFactor}px`;
 
 ### Tablas Utilizadas
 ```
-Categories → Jewelry → Variants → Models3D
+Categories → Jewelry → Models3D
 ```
+**Nota**: La tabla Variants fue eliminada para simplificar la estructura. Ahora Jewelry se conecta directamente con Models3D.
 
 ### Flujo de Datos
 1. **Categories**: Determina tipo de tracking (face/hand/pose)
-2. **Jewelry**: Información de la joya
-3. **Variants**: Diferentes colores/materiales
-4. **Models3D**: Configuración del modelo 3D
+2. **Jewelry**: Información de la joya (incluye image_url como base64)
+3. **Models3D**: Configuración del modelo 3D
+   - `jewelry_id`: FK hacia Jewelry
    - `file_url`: URL del GLB
+   - `file_size_kb`: Tamaño del archivo
    - `scale_factor`: Factor de escala base
    - `rotation_x`, `rotation_y`, `rotation_z`: Ajustes de rotación
 
-### Sin Modificaciones
-- No se crearon nuevas tablas
-- No se modificó la estructura existente
-- Se reutilizaron todos los componentes existentes
+### Modificaciones Realizadas
+- Eliminada tabla Variants para simplificar la estructura
+- Agregada columna jewelry_id en Models3D
+- Imágenes almacenadas como BLOB en base de datos (image_data) y convertidas a base64 en el API
 
 ---
 
@@ -281,10 +292,28 @@ Categories → Jewelry → Variants → Models3D
 - Multer (subida de archivos)
 
 ### Almacenamiento
-- Archivos locales: `backend/public/models/` y `backend/public/uploads/images/`
-- TiDB: Metadatos y URLs
+- Archivos locales: `backend/public/models/` (modelos GLB 3D)
+- Base de datos (MySQL/TiDB): Metadatos, URLs e imágenes (BLOB convertidas a base64)
+
+---
+
+## EJECUCIÓN DEL PROYECTO
+
+### Scripts Disponibles (desde la raíz)
+- `npm run install-all` - Instala dependencias de backend, frontend y raíz
+- `npm run dev` - Ejecuta backend y frontend simultáneamente
+- `npm run dev:backend` - Ejecuta solo el backend
+- `npm run dev:frontend` - Ejecuta solo el frontend
+- `npm run build` - Construye el frontend para producción
+- `npm start` - Inicia el backend en modo producción
+
+### Configuración
+- Backend: Express en puerto 3000 (configurable via .env)
+- Frontend: Vite en puerto 5174
+- Base de datos: MySQL/TiDB (configurable via backend/.env)
 
 ---
 
 **Fecha de implementación**: 2026-09-30
-**Estado**: Implementación básica funcional, requiere pruebas en dispositivos reales y ajuste de parámetros (scale_factor, rotaciones) desde el panel de administración.
+**Última actualización**: 2026-10-06
+**Estado**: Implementación funcional con imágenes de joyas en el selector, estructura simplificada (sin Variants), y opción de ejecución unificada de backend/frontend. Requiere pruebas en dispositivos reales y ajuste de parámetros (scale_factor, rotaciones) desde el panel de administración.

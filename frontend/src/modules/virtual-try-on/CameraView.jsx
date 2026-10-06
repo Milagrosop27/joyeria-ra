@@ -57,7 +57,7 @@ const CameraView = memo(({ onVideoReady, onError }) => {
   }, []); // Sin dependencias - solo se ejecuta una vez
 
   return (
-    <div className="camera-container" style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div className="camera-container">
       {error && (
         <div className="camera-error">
           <p>{error}</p>
@@ -70,6 +70,8 @@ const CameraView = memo(({ onVideoReady, onError }) => {
         playsInline
         muted
         style={{
+          position: 'absolute',
+          inset: 0,
           width: '100%',
           height: '100%',
           objectFit: 'cover',

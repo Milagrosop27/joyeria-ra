@@ -64,6 +64,122 @@ class HandTracking {
     return wrist;
   }
 
+  // Obtener posición de la pulsera: landmark 0 desplazado hacia antebrazo 20%
+  getBraceletPosition(landmarks, forearmOffsetPercent = 0.2) {
+    if (!landmarks || landmarks.length === 0) return null;
+
+    // Landmark 0: muñeca, Landmark 9: dedo medio (base)
+    const wrist = landmarks[0];
+    const middleFingerBase = landmarks[9];
+
+    // Vector de 9 hacia 0 (hacia la muñeca/antebrazo)
+    const direction = {
+      x: wrist.x - middleFingerBase.x,
+      y: wrist.y - middleFingerBase.y,
+      z: wrist.z - middleFingerBase.z
+    };
+
+    // Desplazar 20% hacia el antebrazo desde la muñeca
+    const position = {
+      x: wrist.x + direction.x * forearmOffsetPercent,
+      y: wrist.y + direction.y * forearmOffsetPercent,
+      z: wrist.z + direction.z * forearmOffsetPercent
+    };
+
+    return position;
+  }
+
+  // Calcular tamaño de pulsera: 0.9 × distancia landmarks 5-17 (ancho de palma)
+  getBraceletScale(landmarks, scaleFactor = 1) {
+    if (!landmarks || landmarks.length === 0) return 1;
+
+    // Landmark 5: pulgar (base), Landmark 17: meñique (base)
+    const thumbBase = landmarks[5];
+    const pinkyBase = landmarks[17];
+
+    // Distancia entre 5 y 17 (ancho de palma)
+    const palmWidth = Math.sqrt(
+      Math.pow(pinkyBase.x - thumbBase.x, 2) +
+      Math.pow(pinkyBase.y - thumbBase.y, 2)
+    );
+
+    // Diámetro = 0.9 × ancho de palma × scale_factor
+    const diameter = 0.9 * palmWidth * scaleFactor;
+
+    return diameter;
+  }
+
+  // Calcular rotación de pulsera: ángulo del vector 9→0 (perpendicular al antebrazo)
+  getBraceletRotation(landmarks, rotationXOffset = 0) {
+    if (!landmarks || landmarks.length === 0) return { x: 0, y: 0, z: 0 };
+
+    // Landmark 9: dedo medio (base), Landmark 0: muñeca
+    const middleFingerBase = landmarks[9];
+    const wrist = landmarks[0];
+
+    // Vector de 9 hacia 0 (dirección del antebrazo)
+    const dx = wrist.x - middleFingerBase.x;
+    const dy = wrist.y - middleFingerBase.y;
+
+    // Ángulo del vector en el plano 2D (para rotación Z)
+    const angle = Math.atan2(dy, dx);
+
+    // Convertir a grados
+    const angleDeg = angle * (180 / Math.PI);
+
+    // Rotación Z para que la banda quede perpendicular al antebrazo
+    // Rotación X ajustable para aplanar la vista del aro
+    return {
+      x: rotationXOffset,
+      y: 0,
+      z: angleDeg + 90 // +90 para perpendicular
+    };
+  }
+
+  // Calcular relación 5-17 / 0-9 para detectar mano de canto
+  getHandSideRatio(landmarks) {
+    if (!landmarks || landmarks.length === 0) return 0;
+
+    // Landmark 5: pulgar (base), Landmark 17: meñique (base)
+    const thumbBase = landmarks[5];
+    const pinkyBase = landmarks[17];
+
+    // Landmark 9: dedo medio (base), Landmark 0: muñeca
+    const middleFingerBase = landmarks[9];
+    const wrist = landmarks[0];
+
+    // Distancia 5-17 (ancho de palma)
+    const palmWidth = Math.sqrt(
+      Math.pow(pinkyBase.x - thumbBase.x, 2) +
+      Math.pow(pinkyBase.y - thumbBase.y, 2)
+    );
+
+    // Distancia 0-9 (largo de mano)
+    const handLength = Math.sqrt(
+      Math.pow(middleFingerBase.x - wrist.x, 2) +
+      Math.pow(middleFingerBase.y - wrist.y, 2)
+    );
+
+    if (handLength === 0) return 0;
+
+    return palmWidth / handLength;
+  }
+
+  // Verificar si la muñeca está cerca del borde del cuadro
+  isWristNearBorder(landmarks, borderMargin = 0.03) {
+    if (!landmarks || landmarks.length === 0) return false;
+
+    const wrist = landmarks[0];
+
+    // Verificar si está a menos de borderMargin del borde
+    return (
+      wrist.x < borderMargin ||
+      wrist.x > (1 - borderMargin) ||
+      wrist.y < borderMargin ||
+      wrist.y > (1 - borderMargin)
+    );
+  }
+
   // Obtener posiciones de ambas muñecas
   getBothWristsPositions(results) {
     if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
